@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><style>
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1280px; height: 800px; overflow: hidden; }
+  body { font-family: 'Segoe UI', 'Segoe UI Variable Text', Arial, sans-serif; background: #1B2A4A; color: #EAF0F8; }
+  .wrap { width: 1280px; height: 800px; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+  .head { display: flex; justify-content: space-between; align-items: flex-end; flex: none; height: 44px; }
+  .head h1 { font-size: 21px; font-weight: 700; letter-spacing: 0.2px; }
+  .head .sub { color: #93A4C3; font-size: 12px; margin-top: 3px; }
+  .brand { color: #93A4C3; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; text-align: right; }
+  .brand b { color: #F2C94C; font-weight: 700; }
+  .kpis { display: flex; gap: 12px; flex: none; height: 88px; }
+  .kpi { background: #24345A; border-radius: 10px; padding: 11px 16px; flex: 1; min-width: 0; }
+  .kpi .lab { font-size: 10px; color: #93A4C3; letter-spacing: 0.6px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kpi .val { font-size: 23px; font-weight: 700; color: #F2C94C; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kpi .val.flat { color: #EAF0F8; }
+  .kpi .sub { font-size: 10.5px; color: #93A4C3; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .insight { flex: none; height: 34px; background: #2A3A5F; border-left: 3px solid #F2C94C; border-radius: 6px; padding: 8px 14px; font-size: 12px; color: #EAF0F8; display: flex; align-items: center; gap: 10px; overflow: hidden; }
+  .insight b { color: #F2C94C; letter-spacing: 0.5px; font-size: 10.5px; text-transform: uppercase; white-space: nowrap; }
+  .main { flex: 1; min-height: 0; display: flex; gap: 12px; }
+  .card { background: #24345A; border-radius: 10px; padding: 12px 16px; overflow: hidden; display: flex; flex-direction: column; }
+  .card h3 { font-size: 11px; color: #93A4C3; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 2px; flex: none; }
+  .card .csub { font-size: 10px; color: #93A4C3; margin-bottom: 8px; flex: none; }
+  .chart { flex: 1; min-height: 0; }
+  .bottom { flex: none; height: 200px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { color: #93A4C3; text-align: right; padding: 4px 8px; border-bottom: 1px solid #2A3A5F; font-weight: 600; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.3px; }
+  th:first-child, td:first-child { text-align: left; }
+  td { padding: 5px 8px; border-bottom: 1px solid #2A3A5F; }
+  td.num { text-align: right; white-space: nowrap; }
+  .barwrap { position: relative; height: 4px; background: #1B2A4A; border-radius: 2px; margin-top: 3px; }
+  .barfill { height: 4px; border-radius: 2px; background: #F2C94C; }
+  .chip { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 7px; vertical-align: middle; }
+  .legend { font-size: 11.5px; line-height: 1.6; }
+</style></head><body>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <h1>Customer Intelligence</h1>
+      <div class="sub">Customer value and RFM behaviour</div>
+    </div>
+    <div class="brand">RETAIL ANALYTICS · <b>Customer Intelligence</b></div>
+  </div>
+  <div class="kpis"><div class="kpi qa"><div class="lab">Total Customers</div><div class="val">4,339</div><div class="sub">validated against SQL</div></div><div class="kpi qa"><div class="lab">Repeat Customer Rate</div><div class="val">65.6%</div><div class="sub">2,845 repeat · 1,494 one-time</div></div><div class="kpi qa"><div class="lab">Average Orders per Customer</div><div class="val">5.1</div><div class="sub">orders ÷ customers</div></div><div class="kpi qa"><div class="lab">Average Revenue per Customer</div><div class="val">£2,448</div><div class="sub">total revenue ÷ customers</div></div><div class="kpi qa"><div class="lab">Average Recency</div><div class="val">92 days</div><div class="sub">days since last purchase</div></div></div>
+  <div class="insight"><div class='qa'><b>Key Insight</b><span><b>Champions</b> are 17.8% of customers but generate <b>54.5%</b> of customer-attributed revenue; <b>At Risk + Hibernating</b> together hold 42.9% of the base.</span></div></div>
+  <div class="main">
+    <div class="card qa" style="flex:3;">
+      <h3>RFM Segment Performance</h3>
+      <div class="csub">RFM quartiles validated 100% against SQL · revenue is customer-attributed</div>
+      <div style="flex:1;min-height:0;overflow:auto;">
+        <table>
+          <tr><th>Segment</th><th>Customers</th><th>Revenue</th><th>Avg Rev / Cust</th><th>% of Base</th></tr>
+          <tr><td><span class='chip' style='background:#F2C94C'></span>Champions</td><td class='num'><b>774</b></td><td class='num'>£4,841,927</td><td class='num'>£6,256</td><td class='num'>17.8%<div class='barwrap'><div class='barfill' style='width:18%'></div></div></td></tr><tr><td><span class='chip' style='background:#4FC3F7'></span>Loyal Customers</td><td class='num'><b>538</b></td><td class='num'>£1,635,311</td><td class='num'>£3,040</td><td class='num'>12.4%<div class='barwrap'><div class='barfill' style='width:12%'></div></div></td></tr><tr><td><span class='chip' style='background:#E57373'></span>At Risk</td><td class='num'><b>924</b></td><td class='num'>£1,470,195</td><td class='num'>£1,591</td><td class='num'>21.3%<div class='barwrap'><div class='barfill' style='width:21%'></div></div></td></tr><tr><td><span class='chip' style='background:#81C784'></span>Potential Loyalists</td><td class='num'><b>433</b></td><td class='num'>£462,685</td><td class='num'>£1,069</td><td class='num'>10.0%<div class='barwrap'><div class='barfill' style='width:10%'></div></div></td></tr><tr><td><span class='chip' style='background:#90A4AE'></span>Hibernating</td><td class='num'><b>938</b></td><td class='num'>£237,501</td><td class='num'>£253</td><td class='num'>21.6%<div class='barwrap'><div class='barfill' style='width:22%'></div></div></td></tr><tr><td><span class='chip' style='background:#FF8A65'></span>Needs Attention</td><td class='num'><b>475</b></td><td class='num'>£149,080</td><td class='num'>£314</td><td class='num'>10.9%<div class='barwrap'><div class='barfill' style='width:11%'></div></div></td></tr><tr><td><span class='chip' style='background:#9575CD'></span>New Customers</td><td class='num'><b>257</b></td><td class='num'>£90,510</td><td class='num'>£352</td><td class='num'>5.9%<div class='barwrap'><div class='barfill' style='width:6%'></div></div></td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="card qa" style="flex:2;">
+      <h3>One-Time vs Repeat Customers</h3>
+      <div class="csub">share of the 4,339-customer base</div>
+      <div style="display:flex;align-items:center;gap:10px;flex:1;min-height:0;">
+        <svg viewBox="0 0 150 150" width="150" height="150"><path d="M100,100 L100.0,12.0 A88,88 0 1,1 27.0,149.2 Z" fill="#F2C94C"/><path d="M100,100 L27.0,149.2 A88,88 0 0,1 100.0,12.0 Z" fill="#2A3A5F"/><circle cx="100" cy="100" r="50" fill="#1B2A4A"/><text x="100" y="96" fill="#EAF0F8" font-size="13" font-weight="700" text-anchor="middle">4,339</text><text x="100" y="113" fill="#93A4C3" font-size="8.5" text-anchor="middle">customers</text></svg>
+        <div class="legend">
+          <div><span class="chip" style="background:#F2C94C"></span>Repeat · <b>65.6%</b></div>
+          <div><span class="chip" style="background:#2A3A5F"></span>One-time · <b>34.4%</b></div>
+        </div>
+      </div>
+    </div></div>
+  <div class="bottom">
+    <div class="card qa">
+      <h3>Revenue by RFM Segment</h3>
+      <div class="csub">share of customer-attributed revenue · total £8,887,208.89</div>
+      <div style="display:flex;gap:18px;flex:1;min-height:0;"><div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;">
+        <div style="display:flex;align-items:center;margin:2.5px 0;height:19px;">
+          <div style="width:210px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-right:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="Champions">Champions</div>
+          <div style="flex:1;background:#1B2A4A;border-radius:3px;height:12px;">
+            <div style="width:100.0%;height:12px;background:#F2C94C;border-radius:3px;"></div>
+          </div>
+          <div style="width:155px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-left:9px;white-space:nowrap;">£4,841,927 · 54.5%</div>
+        </div>
+        <div style="display:flex;align-items:center;margin:2.5px 0;height:19px;">
+          <div style="width:210px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-right:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="At Risk">At Risk</div>
+          <div style="flex:1;background:#1B2A4A;border-radius:3px;height:12px;">
+            <div style="width:30.4%;height:12px;background:#F2C94C;border-radius:3px;"></div>
+          </div>
+          <div style="width:155px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-left:9px;white-space:nowrap;">£1,470,195 · 16.5%</div>
+        </div>
+        <div style="display:flex;align-items:center;margin:2.5px 0;height:19px;">
+          <div style="width:210px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-right:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="Hibernating">Hibernating</div>
+          <div style="flex:1;background:#1B2A4A;border-radius:3px;height:12px;">
+            <div style="width:4.9%;height:12px;background:#F2C94C;border-radius:3px;"></div>
+          </div>
+          <div style="width:155px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-left:9px;white-space:nowrap;">£237,501 · 2.7%</div>
+        </div>
+        <div style="display:flex;align-items:center;margin:2.5px 0;height:19px;">
+          <div style="width:210px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-right:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="New Customers">New Customers</div>
+          <div style="flex:1;background:#1B2A4A;border-radius:3px;height:12px;">
+            <div style="width:1.9%;height:12px;background:#F2C94C;border-radius:3px;"></div>
+          </div>
+          <div style="width:155px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-left:9px;white-space:nowrap;">£90,510 · 1.0%</div>
+        </div></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;">
+        <div style="display:flex;align-items:center;margin:2.5px 0;height:19px;">
+          <div style="width:210px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-right:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="Loyal Customers">Loyal Customers</div>
+          <div style="flex:1;background:#1B2A4A;border-radius:3px;height:12px;">
+            <div style="width:100.0%;height:12px;background:#F2C94C;border-radius:3px;"></div>
+          </div>
+          <div style="width:155px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-left:9px;white-space:nowrap;">£1,635,311 · 18.4%</div>
+        </div>
+        <div style="display:flex;align-items:center;margin:2.5px 0;height:19px;">
+          <div style="width:210px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-right:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="Potential Loyalists">Potential Loyalists</div>
+          <div style="flex:1;background:#1B2A4A;border-radius:3px;height:12px;">
+            <div style="width:28.3%;height:12px;background:#F2C94C;border-radius:3px;"></div>
+          </div>
+          <div style="width:155px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-left:9px;white-space:nowrap;">£462,685 · 5.2%</div>
+        </div>
+        <div style="display:flex;align-items:center;margin:2.5px 0;height:19px;">
+          <div style="width:210px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-right:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="Needs Attention">Needs Attention</div>
+          <div style="flex:1;background:#1B2A4A;border-radius:3px;height:12px;">
+            <div style="width:9.1%;height:12px;background:#F2C94C;border-radius:3px;"></div>
+          </div>
+          <div style="width:155px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-left:9px;white-space:nowrap;">£149,080 · 1.7%</div>
+        </div></div></div>
+    </div></div>
+</div>
+<pre id="qa" style="display:none"></pre>
+
+<script>
+window.addEventListener('load', function () {
+  setTimeout(function () {
+    var out = [];
+    var vw = 1280, vh = 800;
+    var de = document.documentElement;
+    if (de.scrollWidth > vw + 1) out.push('OVERFLOW_X=' + (de.scrollWidth - vw) + 'px');
+    if (de.scrollHeight > vh + 1) out.push('OVERFLOW_Y=' + (de.scrollHeight - vh) + 'px');
+    document.querySelectorAll('.qa').forEach(function (el, i) {
+      var r = el.getBoundingClientRect();
+      var id = el.dataset.qa || el.className;
+      if (r.left < -0.5) out.push('LEFT<' + id + '=' + r.left.toFixed(1));
+      if (r.right > vw + 0.5) out.push('RIGHT>' + id + '=' + r.right.toFixed(1) + ' w=' + (r.right - r.left).toFixed(0));
+      if (r.top < -0.5) out.push('TOP<' + id + '=' + r.top.toFixed(1));
+      if (r.bottom > vh + 0.5) out.push('BOTTOM>' + id + '=' + r.bottom.toFixed(1) + ' h=' + (r.bottom - r.top).toFixed(0));
+    });
+    document.getElementById('qa').textContent = out.length ? out.join('\n') : 'QA_OK';
+    document.getElementById('qa').dataset.qa = out.length ? 'FAIL' : 'PASS';
+  }, 150);
+});
+</script>
+
+</body></html>

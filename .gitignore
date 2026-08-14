@@ -1,0 +1,17 @@
+# Credentials / secrets
+.env
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Generated data artifacts (regenerate with the notebook / scripts)
+data/cleaned_retail_data.csv
+powerbi/dataset/

@@ -1,0 +1,3 @@
+expression DatasetFolder = "C:/Users/Abdul Rehman/Documents/GitHub/Maimoona Data Analysis/powerbi/dataset" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+
+    annotation PBI_ResultType = Text

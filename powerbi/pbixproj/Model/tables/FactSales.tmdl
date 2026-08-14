@@ -1,0 +1,70 @@
+table FactSales
+
+    column transaction_id
+        dataType: int64
+        isHidden
+        formatString: 0
+        summarizeBy: none
+        sourceColumn: transaction_id
+
+    column invoice_no
+        dataType: string
+        summarizeBy: none
+        sourceColumn: invoice_no
+
+    column stock_code
+        dataType: string
+        isHidden
+        summarizeBy: none
+        sourceColumn: stock_code
+
+    column customer_id
+        dataType: int64
+        isHidden
+        formatString: 0
+        summarizeBy: none
+        sourceColumn: customer_id
+
+    column country
+        dataType: string
+        isHidden
+        summarizeBy: none
+        sourceColumn: country
+
+    column invoice_date
+        dataType: dateTime
+        formatString: General Date
+        summarizeBy: none
+        sourceColumn: invoice_date
+
+    column quantity
+        dataType: int64
+        formatString: #,##0
+        summarizeBy: sum
+        sourceColumn: quantity
+
+    column unit_price
+        dataType: decimal
+        formatString: £#,##0.00
+        summarizeBy: sum
+        sourceColumn: unit_price
+
+    column total_price
+        dataType: decimal
+        formatString: £#,##0.00
+        summarizeBy: sum
+        sourceColumn: total_price
+
+    partition FactSales = m
+        mode: import
+        source =
+                let
+                    Source = Csv.Document(File.Contents(DatasetFolder & "/FactSales.csv"),[Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+                    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+                    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"transaction_id", Int64.Type}, {"invoice_no", type text}, {"stock_code", type text}, {"country", type text}, {"invoice_date", type datetime}, {"quantity", Int64.Type}, {"unit_price", type number}, {"total_price", type number}}),
+                    #"Replaced Value" = Table.ReplaceValue(#"Changed Type","",null,Replacer.ReplaceValue,{"customer_id"}),
+                    #"Changed Type1" = Table.TransformColumnTypes(#"Replaced Value",{{"customer_id", Int64.Type}})
+                in
+                    #"Changed Type1"
+
+        annotation PBI_ResultType = Table

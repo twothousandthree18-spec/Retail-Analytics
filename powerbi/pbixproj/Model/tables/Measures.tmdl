@@ -1,0 +1,118 @@
+table Measures
+
+    /// Total revenue (sum of line-level total_price), the headline KPI.
+    measure 'Total Revenue' = SUM(FactSales[total_price])
+        formatString: £#,##0.00
+        displayFolder: 1. Core KPIs
+
+    measure 'Total Orders' = DISTINCTCOUNT(FactSales[invoice_no])
+        formatString: #,##0
+        displayFolder: 1. Core KPIs
+
+    measure 'Total Units Sold' = SUM(FactSales[quantity])
+        formatString: #,##0
+        displayFolder: 1. Core KPIs
+
+    measure 'Total Customers' = DISTINCTCOUNT(FactSales[customer_id])
+        formatString: #,##0
+        displayFolder: 1. Core KPIs
+
+    measure 'Total Transactions' = COUNTROWS(FactSales)
+        formatString: #,##0
+        displayFolder: 1. Core KPIs
+
+    measure 'Average Order Value' = DIVIDE([Total Revenue], [Total Orders])
+        formatString: £#,##0.00
+        displayFolder: 2. Value
+
+    measure 'Average Unit Price' = DIVIDE([Total Revenue], [Total Units Sold])
+        formatString: £#,##0.00
+        displayFolder: 2. Value
+
+    measure 'Average Revenue per Customer' = DIVIDE([Total Revenue], [Total Customers])
+        formatString: £#,##0.00
+        displayFolder: 2. Value
+
+    measure 'Average Orders per Customer' = DIVIDE([Total Orders], [Total Customers])
+        formatString: #,##0.0
+        displayFolder: 2. Value
+
+    measure 'Average Daily Revenue' = DIVIDE([Total Revenue], DISTINCTCOUNT(FactSales[invoice_date]))
+        formatString: £#,##0.00
+        displayFolder: 2. Value
+
+    measure 'Customer Revenue' = CALCULATE([Total Revenue], NOT ISBLANK(FactSales[customer_id]))
+        formatString: £#,##0.00
+        displayFolder: 2. Value
+
+    measure 'Revenue Contribution %' = DIVIDE([Total Revenue], CALCULATE([Total Revenue], ALLSELECTED()))
+        formatString: 0.0%
+        displayFolder: 2. Value
+
+    measure 'Repeat Customer Rate' = DIVIDE(CALCULATE([Total Customers], DimCustomer[is_repeat] = 1), [Total Customers])
+        formatString: 0.0%
+        displayFolder: 3. Customer
+
+    measure 'Repeat Customer Count' = CALCULATE([Total Customers], DimCustomer[is_repeat] = 1)
+        formatString: #,##0
+        displayFolder: 3. Customer
+
+    measure 'One-Time Customer Count' = CALCULATE([Total Customers], DimCustomer[is_repeat] = 0)
+        formatString: #,##0
+        displayFolder: 3. Customer
+
+    measure 'Average Frequency' = AVERAGE(DimCustomer[frequency])
+        formatString: #,##0.0
+        displayFolder: 3. Customer
+
+    measure 'Average Recency (days)' = AVERAGE(DimCustomer[recency_days])
+        formatString: #,##0
+        displayFolder: 3. Customer
+
+    measure 'Average Monetary' = AVERAGE(DimCustomer[monetary])
+        formatString: £#,##0.00
+        displayFolder: 3. Customer
+
+    measure 'Average RFM Score' = AVERAGE(DimCustomer[rfm_score])
+        formatString: 0.0
+        displayFolder: 3. Customer
+
+    measure 'Customer Lifetime (days)' = AVERAGE(DimCustomer[customer_lifetime_days])
+        formatString: #,##0
+        displayFolder: 3. Customer
+
+    measure 'Segment Revenue Share %' = DIVIDE([Total Revenue], CALCULATE([Total Revenue], ALL(DimCustomer[segment])))
+        formatString: 0.0%
+        displayFolder: 3. Customer
+
+    measure 'Previous Month Revenue' = CALCULATE([Total Revenue], PREVIOUSMONTH(DimDate[date]))
+        formatString: £#,##0.00
+        displayFolder: 4. Time
+
+    measure 'MoM Revenue Growth %' = DIVIDE([Total Revenue] - [Previous Month Revenue], [Previous Month Revenue])
+        formatString: 0.0%
+        displayFolder: 4. Time
+
+    measure 'Running Revenue YTD' = TOTALYTD([Total Revenue], DimDate[date])
+        formatString: £#,##0.00
+        displayFolder: 4. Time
+
+    measure 'Revenue vs Same Period Last Year' = [Total Revenue] - CALCULATE([Total Revenue], SAMEPERIODLASTYEAR(DimDate[date]))
+        formatString: £#,##0.00
+        displayFolder: 4. Time
+
+    measure 'YoY Revenue Growth %' = DIVIDE([Revenue vs Same Period Last Year], CALCULATE([Total Revenue], SAMEPERIODLASTYEAR(DimDate[date])))
+        formatString: 0.0%
+        displayFolder: 4. Time
+
+    measure 'Product Revenue Rank' = RANKX(ALL(DimProduct[stock_code]), [Total Revenue], , DESC)
+        formatString: 0
+        displayFolder: 5. Ranking
+
+    measure 'Country Revenue Rank' = RANKX(ALL(DimCountry[country]), [Total Revenue], , DESC)
+        formatString: 0
+        displayFolder: 5. Ranking
+
+    measure 'Top 10% Customer Revenue Share' = VAR _rev = CALCULATE([Total Revenue], NOT ISBLANK(FactSales[customer_id])) VAR _cust = SUMMARIZE(FactSales, DimCustomer[customer_id], "@Rev", [Total Revenue]) VAR _ranked = ADDCOLUMNS(_cust, "@Rnk", RANKX(_cust, [@Rev], , DESC)) VAR _topN = ROUND(COUNTROWS(_ranked) * 0.10, 0) VAR _top = FILTER(_ranked, [@Rnk] <= _topN) RETURN DIVIDE(SUMX(_top, [@Rev]), _rev)
+        formatString: 0.0%
+        displayFolder: 5. Ranking

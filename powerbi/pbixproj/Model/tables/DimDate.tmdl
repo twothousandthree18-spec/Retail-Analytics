@@ -1,0 +1,89 @@
+table DimDate
+
+    column date
+        dataType: dateTime
+        isKey
+        formatString: dd mmm yyyy
+        summarizeBy: none
+        sourceColumn: date
+
+    column year
+        dataType: int64
+        formatString: 0
+        summarizeBy: none
+        sourceColumn: year
+
+    column quarter
+        dataType: int64
+        formatString: 0
+        summarizeBy: none
+        sourceColumn: quarter
+
+    column quarter_label
+        dataType: string
+        summarizeBy: none
+        sourceColumn: quarter_label
+
+    column month_number
+        dataType: int64
+        formatString: 0
+        summarizeBy: none
+        sourceColumn: month_number
+
+    column month_name
+        dataType: string
+        summarizeBy: none
+        sourceColumn: month_name
+        sortByColumn: DimDate.month_number
+
+    column year_month
+        dataType: string
+        summarizeBy: none
+        sourceColumn: year_month
+
+    column year_month_name
+        dataType: string
+        summarizeBy: none
+        sourceColumn: year_month_name
+        sortByColumn: DimDate.year_month
+
+    column week_of_year
+        dataType: int64
+        formatString: 0
+        summarizeBy: none
+        sourceColumn: week_of_year
+
+    column day
+        dataType: int64
+        formatString: 0
+        summarizeBy: none
+        sourceColumn: day
+
+    column day_of_week_number
+        dataType: int64
+        formatString: 0
+        summarizeBy: none
+        sourceColumn: day_of_week_number
+
+    column day_of_week_name
+        dataType: string
+        summarizeBy: none
+        sourceColumn: day_of_week_name
+        sortByColumn: DimDate.day_of_week_number
+
+    column is_weekend
+        dataType: boolean
+        summarizeBy: none
+        sourceColumn: is_weekend
+
+    partition DimDate = m
+        mode: import
+        source =
+                let
+                    Source = Csv.Document(File.Contents(DatasetFolder & "/DimDate.csv"),[Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+                    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+                    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"date", type date}, {"year", Int64.Type}, {"quarter", Int64.Type}, {"quarter_label", type text}, {"month_number", Int64.Type}, {"month_name", type text}, {"year_month", type text}, {"year_month_name", type text}, {"week_of_year", Int64.Type}, {"day", Int64.Type}, {"day_of_week_number", Int64.Type}, {"day_of_week_name", type text}, {"is_weekend", type logical}})
+                in
+                    #"Changed Type"
+
+        annotation PBI_ResultType = Table

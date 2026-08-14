@@ -1,0 +1,665 @@
+{
+  "name": "Retail Analysis",
+  "compatibilityLevel": 1550,
+  "model": {
+    "culture": "en-US",
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "sourceQueryCulture": "en-US",
+    "tables": [
+      {
+        "name": "DimCountry",
+        "columns": [
+          {
+            "name": "country",
+            "dataType": "string",
+            "isKey": true,
+            "sourceColumn": "country",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "region",
+            "dataType": "string",
+            "sourceColumn": "region",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "DimCountry",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(DatasetFolder & \"/DimCountry.csv\"),[Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    #\"Promoted Headers\" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    #\"Changed Type\" = Table.TransformColumnTypes(#\"Promoted Headers\",{{\"country\", type text}, {\"region\", type text}})",
+                "in",
+                "    #\"Changed Type\""
+              ]
+            },
+            "annotations": [
+              {
+                "name": "PBI_ResultType",
+                "value": "Table"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "DimCustomer",
+        "columns": [
+          {
+            "name": "customer_id",
+            "dataType": "int64",
+            "isHidden": true,
+            "isKey": true,
+            "sourceColumn": "customer_id",
+            "formatString": "0",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "first_order_date",
+            "dataType": "dateTime",
+            "sourceColumn": "first_order_date",
+            "formatString": "dd mmm yyyy",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "last_order_date",
+            "dataType": "dateTime",
+            "sourceColumn": "last_order_date",
+            "formatString": "dd mmm yyyy",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "recency_days",
+            "dataType": "int64",
+            "sourceColumn": "recency_days",
+            "formatString": "#,##0",
+            "summarizeBy": "average"
+          },
+          {
+            "name": "frequency",
+            "dataType": "int64",
+            "sourceColumn": "frequency",
+            "formatString": "#,##0",
+            "summarizeBy": "average"
+          },
+          {
+            "name": "monetary",
+            "dataType": "decimal",
+            "sourceColumn": "monetary",
+            "formatString": "£#,##0.00",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "r_score",
+            "dataType": "int64",
+            "sourceColumn": "r_score",
+            "formatString": "0",
+            "summarizeBy": "average"
+          },
+          {
+            "name": "f_score",
+            "dataType": "int64",
+            "sourceColumn": "f_score",
+            "formatString": "0",
+            "summarizeBy": "average"
+          },
+          {
+            "name": "m_score",
+            "dataType": "int64",
+            "sourceColumn": "m_score",
+            "formatString": "0",
+            "summarizeBy": "average"
+          },
+          {
+            "name": "rfm_score",
+            "dataType": "int64",
+            "sourceColumn": "rfm_score",
+            "formatString": "0",
+            "summarizeBy": "average"
+          },
+          {
+            "name": "customer_lifetime_days",
+            "dataType": "int64",
+            "sourceColumn": "customer_lifetime_days",
+            "formatString": "#,##0",
+            "summarizeBy": "average"
+          },
+          {
+            "name": "is_repeat",
+            "dataType": "int64",
+            "sourceColumn": "is_repeat",
+            "formatString": "0",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "first_purchase_year_month",
+            "dataType": "string",
+            "sourceColumn": "first_purchase_year_month",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "segment",
+            "dataType": "string",
+            "sourceColumn": "segment",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "DimCustomer",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(DatasetFolder & \"/DimCustomer.csv\"),[Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    #\"Promoted Headers\" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    #\"Changed Type\" = Table.TransformColumnTypes(#\"Promoted Headers\",{{\"customer_id\", Int64.Type}, {\"first_order_date\", type date}, {\"last_order_date\", type date}, {\"recency_days\", Int64.Type}, {\"frequency\", Int64.Type}, {\"monetary\", type number}, {\"r_score\", Int64.Type}, {\"f_score\", Int64.Type}, {\"m_score\", Int64.Type}, {\"rfm_score\", Int64.Type}, {\"customer_lifetime_days\", Int64.Type}, {\"is_repeat\", Int64.Type}, {\"first_purchase_year_month\", type text}, {\"segment\", type text}})",
+                "in",
+                "    #\"Changed Type\""
+              ]
+            },
+            "annotations": [
+              {
+                "name": "PBI_ResultType",
+                "value": "Table"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "DimDate",
+        "columns": [
+          {
+            "name": "date",
+            "dataType": "dateTime",
+            "isKey": true,
+            "sourceColumn": "date",
+            "formatString": "dd mmm yyyy",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "year",
+            "dataType": "int64",
+            "sourceColumn": "year",
+            "formatString": "0",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "quarter",
+            "dataType": "int64",
+            "sourceColumn": "quarter",
+            "formatString": "0",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "quarter_label",
+            "dataType": "string",
+            "sourceColumn": "quarter_label",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "month_number",
+            "dataType": "int64",
+            "sourceColumn": "month_number",
+            "formatString": "0",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "month_name",
+            "dataType": "string",
+            "sourceColumn": "month_name",
+            "sortByColumn": "month_number",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "year_month",
+            "dataType": "string",
+            "sourceColumn": "year_month",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "year_month_name",
+            "dataType": "string",
+            "sourceColumn": "year_month_name",
+            "sortByColumn": "year_month",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "week_of_year",
+            "dataType": "int64",
+            "sourceColumn": "week_of_year",
+            "formatString": "0",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "day",
+            "dataType": "int64",
+            "sourceColumn": "day",
+            "formatString": "0",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "day_of_week_number",
+            "dataType": "int64",
+            "sourceColumn": "day_of_week_number",
+            "formatString": "0",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "day_of_week_name",
+            "dataType": "string",
+            "sourceColumn": "day_of_week_name",
+            "sortByColumn": "day_of_week_number",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "is_weekend",
+            "dataType": "boolean",
+            "sourceColumn": "is_weekend",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "DimDate",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(DatasetFolder & \"/DimDate.csv\"),[Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    #\"Promoted Headers\" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    #\"Changed Type\" = Table.TransformColumnTypes(#\"Promoted Headers\",{{\"date\", type date}, {\"year\", Int64.Type}, {\"quarter\", Int64.Type}, {\"quarter_label\", type text}, {\"month_number\", Int64.Type}, {\"month_name\", type text}, {\"year_month\", type text}, {\"year_month_name\", type text}, {\"week_of_year\", Int64.Type}, {\"day\", Int64.Type}, {\"day_of_week_number\", Int64.Type}, {\"day_of_week_name\", type text}, {\"is_weekend\", type logical}})",
+                "in",
+                "    #\"Changed Type\""
+              ]
+            },
+            "annotations": [
+              {
+                "name": "PBI_ResultType",
+                "value": "Table"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "DimProduct",
+        "columns": [
+          {
+            "name": "stock_code",
+            "dataType": "string",
+            "isKey": true,
+            "sourceColumn": "stock_code",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "description",
+            "dataType": "string",
+            "sourceColumn": "description",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "category",
+            "dataType": "string",
+            "sourceColumn": "category",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "DimProduct",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(DatasetFolder & \"/DimProduct.csv\"),[Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    #\"Promoted Headers\" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    #\"Changed Type\" = Table.TransformColumnTypes(#\"Promoted Headers\",{{\"stock_code\", type text}, {\"description\", type text}, {\"category\", type text}})",
+                "in",
+                "    #\"Changed Type\""
+              ]
+            },
+            "annotations": [
+              {
+                "name": "PBI_ResultType",
+                "value": "Table"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "FactSales",
+        "columns": [
+          {
+            "name": "transaction_id",
+            "dataType": "int64",
+            "isHidden": true,
+            "sourceColumn": "transaction_id",
+            "formatString": "0",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "invoice_no",
+            "dataType": "string",
+            "sourceColumn": "invoice_no",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "stock_code",
+            "dataType": "string",
+            "isHidden": true,
+            "sourceColumn": "stock_code",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "customer_id",
+            "dataType": "int64",
+            "isHidden": true,
+            "sourceColumn": "customer_id",
+            "formatString": "0",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "country",
+            "dataType": "string",
+            "isHidden": true,
+            "sourceColumn": "country",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "invoice_date",
+            "dataType": "dateTime",
+            "sourceColumn": "invoice_date",
+            "formatString": "General Date",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "quantity",
+            "dataType": "int64",
+            "sourceColumn": "quantity",
+            "formatString": "#,##0",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "unit_price",
+            "dataType": "decimal",
+            "sourceColumn": "unit_price",
+            "formatString": "£#,##0.00",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "total_price",
+            "dataType": "decimal",
+            "sourceColumn": "total_price",
+            "formatString": "£#,##0.00",
+            "summarizeBy": "sum"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "FactSales",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(DatasetFolder & \"/FactSales.csv\"),[Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    #\"Promoted Headers\" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    #\"Changed Type\" = Table.TransformColumnTypes(#\"Promoted Headers\",{{\"transaction_id\", Int64.Type}, {\"invoice_no\", type text}, {\"stock_code\", type text}, {\"country\", type text}, {\"invoice_date\", type datetime}, {\"quantity\", Int64.Type}, {\"unit_price\", type number}, {\"total_price\", type number}}),",
+                "    #\"Replaced Value\" = Table.ReplaceValue(#\"Changed Type\",\"\",null,Replacer.ReplaceValue,{\"customer_id\"}),",
+                "    #\"Changed Type1\" = Table.TransformColumnTypes(#\"Replaced Value\",{{\"customer_id\", Int64.Type}})",
+                "in",
+                "    #\"Changed Type1\""
+              ]
+            },
+            "annotations": [
+              {
+                "name": "PBI_ResultType",
+                "value": "Table"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Measures",
+        "measures": [
+          {
+            "name": "Total Revenue",
+            "description": "Total revenue (sum of line-level total_price), the headline KPI.",
+            "expression": "SUM(FactSales[total_price])",
+            "formatString": "£#,##0.00",
+            "displayFolder": "1. Core KPIs"
+          },
+          {
+            "name": "Total Orders",
+            "expression": "DISTINCTCOUNT(FactSales[invoice_no])",
+            "formatString": "#,##0",
+            "displayFolder": "1. Core KPIs"
+          },
+          {
+            "name": "Total Units Sold",
+            "expression": "SUM(FactSales[quantity])",
+            "formatString": "#,##0",
+            "displayFolder": "1. Core KPIs"
+          },
+          {
+            "name": "Total Customers",
+            "expression": "DISTINCTCOUNT(FactSales[customer_id])",
+            "formatString": "#,##0",
+            "displayFolder": "1. Core KPIs"
+          },
+          {
+            "name": "Total Transactions",
+            "expression": "COUNTROWS(FactSales)",
+            "formatString": "#,##0",
+            "displayFolder": "1. Core KPIs"
+          },
+          {
+            "name": "Average Order Value",
+            "expression": "DIVIDE([Total Revenue], [Total Orders])",
+            "formatString": "£#,##0.00",
+            "displayFolder": "2. Value"
+          },
+          {
+            "name": "Average Unit Price",
+            "expression": "DIVIDE([Total Revenue], [Total Units Sold])",
+            "formatString": "£#,##0.00",
+            "displayFolder": "2. Value"
+          },
+          {
+            "name": "Average Revenue per Customer",
+            "expression": "DIVIDE([Total Revenue], [Total Customers])",
+            "formatString": "£#,##0.00",
+            "displayFolder": "2. Value"
+          },
+          {
+            "name": "Average Orders per Customer",
+            "expression": "DIVIDE([Total Orders], [Total Customers])",
+            "formatString": "#,##0.0",
+            "displayFolder": "2. Value"
+          },
+          {
+            "name": "Average Daily Revenue",
+            "expression": "DIVIDE([Total Revenue], DISTINCTCOUNT(FactSales[invoice_date]))",
+            "formatString": "£#,##0.00",
+            "displayFolder": "2. Value"
+          },
+          {
+            "name": "Customer Revenue",
+            "expression": "CALCULATE([Total Revenue], NOT ISBLANK(FactSales[customer_id]))",
+            "formatString": "£#,##0.00",
+            "displayFolder": "2. Value"
+          },
+          {
+            "name": "Revenue Contribution %",
+            "expression": "DIVIDE([Total Revenue], CALCULATE([Total Revenue], ALLSELECTED()))",
+            "formatString": "0.0%",
+            "displayFolder": "2. Value"
+          },
+          {
+            "name": "Repeat Customer Rate",
+            "expression": "DIVIDE(CALCULATE([Total Customers], DimCustomer[is_repeat] = 1), [Total Customers])",
+            "formatString": "0.0%",
+            "displayFolder": "3. Customer"
+          },
+          {
+            "name": "Repeat Customer Count",
+            "expression": "CALCULATE([Total Customers], DimCustomer[is_repeat] = 1)",
+            "formatString": "#,##0",
+            "displayFolder": "3. Customer"
+          },
+          {
+            "name": "One-Time Customer Count",
+            "expression": "CALCULATE([Total Customers], DimCustomer[is_repeat] = 0)",
+            "formatString": "#,##0",
+            "displayFolder": "3. Customer"
+          },
+          {
+            "name": "Average Frequency",
+            "expression": "AVERAGE(DimCustomer[frequency])",
+            "formatString": "#,##0.0",
+            "displayFolder": "3. Customer"
+          },
+          {
+            "name": "Average Recency (days)",
+            "expression": "AVERAGE(DimCustomer[recency_days])",
+            "formatString": "#,##0",
+            "displayFolder": "3. Customer"
+          },
+          {
+            "name": "Average Monetary",
+            "expression": "AVERAGE(DimCustomer[monetary])",
+            "formatString": "£#,##0.00",
+            "displayFolder": "3. Customer"
+          },
+          {
+            "name": "Average RFM Score",
+            "expression": "AVERAGE(DimCustomer[rfm_score])",
+            "formatString": "0.0",
+            "displayFolder": "3. Customer"
+          },
+          {
+            "name": "Customer Lifetime (days)",
+            "expression": "AVERAGE(DimCustomer[customer_lifetime_days])",
+            "formatString": "#,##0",
+            "displayFolder": "3. Customer"
+          },
+          {
+            "name": "Segment Revenue Share %",
+            "expression": "DIVIDE([Total Revenue], CALCULATE([Total Revenue], ALL(DimCustomer[segment])))",
+            "formatString": "0.0%",
+            "displayFolder": "3. Customer"
+          },
+          {
+            "name": "Previous Month Revenue",
+            "expression": "CALCULATE([Total Revenue], PREVIOUSMONTH(DimDate[date]))",
+            "formatString": "£#,##0.00",
+            "displayFolder": "4. Time"
+          },
+          {
+            "name": "MoM Revenue Growth %",
+            "expression": "DIVIDE([Total Revenue] - [Previous Month Revenue], [Previous Month Revenue])",
+            "formatString": "0.0%",
+            "displayFolder": "4. Time"
+          },
+          {
+            "name": "Running Revenue YTD",
+            "expression": "TOTALYTD([Total Revenue], DimDate[date])",
+            "formatString": "£#,##0.00",
+            "displayFolder": "4. Time"
+          },
+          {
+            "name": "Revenue vs Same Period Last Year",
+            "expression": "[Total Revenue] - CALCULATE([Total Revenue], SAMEPERIODLASTYEAR(DimDate[date]))",
+            "formatString": "£#,##0.00",
+            "displayFolder": "4. Time"
+          },
+          {
+            "name": "YoY Revenue Growth %",
+            "expression": "DIVIDE([Revenue vs Same Period Last Year], CALCULATE([Total Revenue], SAMEPERIODLASTYEAR(DimDate[date])))",
+            "formatString": "0.0%",
+            "displayFolder": "4. Time"
+          },
+          {
+            "name": "Product Revenue Rank",
+            "expression": "RANKX(ALL(DimProduct[stock_code]), [Total Revenue], , DESC)",
+            "formatString": "0",
+            "displayFolder": "5. Ranking"
+          },
+          {
+            "name": "Country Revenue Rank",
+            "expression": "RANKX(ALL(DimCountry[country]), [Total Revenue], , DESC)",
+            "formatString": "0",
+            "displayFolder": "5. Ranking"
+          },
+          {
+            "name": "Top 10% Customer Revenue Share",
+            "expression": "VAR _rev = CALCULATE([Total Revenue], NOT ISBLANK(FactSales[customer_id])) VAR _cust = SUMMARIZE(FactSales, DimCustomer[customer_id], \"@Rev\", [Total Revenue]) VAR _ranked = ADDCOLUMNS(_cust, \"@Rnk\", RANKX(_cust, [@Rev], , DESC)) VAR _topN = ROUND(COUNTROWS(_ranked) * 0.10, 0) VAR _top = FILTER(_ranked, [@Rnk] <= _topN) RETURN DIVIDE(SUMX(_top, [@Rev]), _rev)",
+            "formatString": "0.0%",
+            "displayFolder": "5. Ranking"
+          }
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "name": "11111111-1111-4111-8111-111111111111",
+        "fromTable": "FactSales",
+        "fromColumn": "invoice_date",
+        "toTable": "DimDate",
+        "toColumn": "date"
+      },
+      {
+        "name": "22222222-2222-4222-8222-222222222222",
+        "fromTable": "FactSales",
+        "fromColumn": "customer_id",
+        "toTable": "DimCustomer",
+        "toColumn": "customer_id"
+      },
+      {
+        "name": "33333333-3333-4333-8333-333333333333",
+        "fromTable": "FactSales",
+        "fromColumn": "stock_code",
+        "toTable": "DimProduct",
+        "toColumn": "stock_code"
+      },
+      {
+        "name": "44444444-4444-4444-8444-444444444444",
+        "fromTable": "FactSales",
+        "fromColumn": "country",
+        "toTable": "DimCountry",
+        "toColumn": "country"
+      }
+    ],
+    "expressions": [
+      {
+        "name": "DatasetFolder",
+        "kind": "m",
+        "expression": "\"C:/Users/Abdul Rehman/Documents/GitHub/Maimoona Data Analysis/powerbi/dataset\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Text"
+          }
+        ]
+      }
+    ],
+    "annotations": [
+      {
+        "name": "__PBI_TimeIntelligenceEnabled",
+        "value": "0"
+      }
+    ]
+  }
+}

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><style>
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1280px; height: 800px; overflow: hidden; }
+  body { font-family: 'Segoe UI', 'Segoe UI Variable Text', Arial, sans-serif; background: #1B2A4A; color: #EAF0F8; }
+  .wrap { width: 1280px; height: 800px; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+  .head { display: flex; justify-content: space-between; align-items: flex-end; flex: none; height: 44px; }
+  .head h1 { font-size: 21px; font-weight: 700; letter-spacing: 0.2px; }
+  .head .sub { color: #93A4C3; font-size: 12px; margin-top: 3px; }
+  .brand { color: #93A4C3; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; text-align: right; }
+  .brand b { color: #F2C94C; font-weight: 700; }
+  .kpis { display: flex; gap: 12px; flex: none; height: 88px; }
+  .kpi { background: #24345A; border-radius: 10px; padding: 11px 16px; flex: 1; min-width: 0; }
+  .kpi .lab { font-size: 10px; color: #93A4C3; letter-spacing: 0.6px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kpi .val { font-size: 23px; font-weight: 700; color: #F2C94C; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kpi .val.flat { color: #EAF0F8; }
+  .kpi .sub { font-size: 10.5px; color: #93A4C3; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .insight { flex: none; height: 34px; background: #2A3A5F; border-left: 3px solid #F2C94C; border-radius: 6px; padding: 8px 14px; font-size: 12px; color: #EAF0F8; display: flex; align-items: center; gap: 10px; overflow: hidden; }
+  .insight b { color: #F2C94C; letter-spacing: 0.5px; font-size: 10.5px; text-transform: uppercase; white-space: nowrap; }
+  .main { flex: 1; min-height: 0; display: flex; gap: 12px; }
+  .card { background: #24345A; border-radius: 10px; padding: 12px 16px; overflow: hidden; display: flex; flex-direction: column; }
+  .card h3 { font-size: 11px; color: #93A4C3; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 2px; flex: none; }
+  .card .csub { font-size: 10px; color: #93A4C3; margin-bottom: 8px; flex: none; }
+  .chart { flex: 1; min-height: 0; }
+  .bottom { flex: none; height: 200px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { color: #93A4C3; text-align: right; padding: 4px 8px; border-bottom: 1px solid #2A3A5F; font-weight: 600; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.3px; }
+  th:first-child, td:first-child { text-align: left; }
+  td { padding: 5px 8px; border-bottom: 1px solid #2A3A5F; }
+  td.num { text-align: right; white-space: nowrap; }
+  .barwrap { position: relative; height: 4px; background: #1B2A4A; border-radius: 2px; margin-top: 3px; }
+  .barfill { height: 4px; border-radius: 2px; background: #F2C94C; }
+  .chip { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 7px; vertical-align: middle; }
+  .legend { font-size: 11.5px; line-height: 1.6; }
+</style></head><body>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <h1>Geographic Performance</h1>
+      <div class="sub">Where revenue comes from</div>
+    </div>
+    <div class="brand">RETAIL ANALYTICS · <b>Geographic Performance</b></div>
+  </div>
+  <div class="kpis"><div class="kpi qa"><div class="lab">Countries With Sales</div><div class="val">38</div><div class="sub">38 destination markets</div></div><div class="kpi qa"><div class="lab">UK & Ireland</div><div class="val">87.4%</div><div class="sub">£9,283,201</div></div><div class="kpi qa"><div class="lab">Europe</div><div class="val">10.3%</div><div class="sub">£1,097,394</div></div><div class="kpi qa"><div class="lab">Asia Pacific</div><div class="val">2.0%</div><div class="sub">£212,632</div></div><div class="kpi qa"><div class="lab">Other Markets</div><div class="val">0.3%</div><div class="sub">MEA · Americas · Unspecified</div></div></div>
+  <div class="insight"><div class='qa'><b>Key Insight</b><span><b>UK &amp; Ireland</b> generate <b>87.4%</b> of revenue (the UK alone 84.6%); <b>Eire</b> has the highest average revenue per customer at £88,421.</span></div></div>
+  <div class="main">
+    <div class="card qa" style="flex:3;">
+      <h3>Revenue by Region</h3>
+      <div class="csub">mutually exclusive regions · shares sum to 100%</div>
+      <div style="display:flex;align-items:center;gap:14px;flex:1;min-height:0;">
+        <svg viewBox="0 0 165 165" width="165" height="165"><path d="M100,100 L100.0,12.0 A88,88 0 1,1 37.4,38.1 Z" fill="#F2C94C"/><path d="M100,100 L37.4,38.1 A88,88 0 0,1 87.6,12.9 Z" fill="#4FC3F7"/><path d="M100,100 L87.6,12.9 A88,88 0 0,1 98.6,12.0 Z" fill="#81C784"/><path d="M100,100 L98.6,12.0 A88,88 0 0,1 99.3,12.0 Z" fill="#9575CD"/><path d="M100,100 L99.3,12.0 A88,88 0 0,1 99.8,12.0 Z" fill="#FF8A65"/><path d="M100,100 L99.8,12.0 A88,88 0 0,1 100.0,12.0 Z" fill="#2A3A5F"/><circle cx="100" cy="100" r="50" fill="#1B2A4A"/><text x="100" y="96" fill="#EAF0F8" font-size="13" font-weight="700" text-anchor="middle">£10.6m</text><text x="100" y="113" fill="#93A4C3" font-size="8.5" text-anchor="middle">total revenue</text></svg>
+        <div style="flex:1;min-width:0;"><div class="legend"><span class="chip" style="background:#F2C94C"></span>UK & Ireland · <b>87.4%</b></div><div class="legend"><span class="chip" style="background:#4FC3F7"></span>Europe · <b>10.3%</b></div><div class="legend"><span class="chip" style="background:#81C784"></span>Asia Pacific · <b>2.0%</b></div><div class="legend"><span class="chip" style="background:#9575CD"></span>Middle East & Africa · <b>0.1%</b></div><div class="legend"><span class="chip" style="background:#FF8A65"></span>Americas · <b>0.1%</b></div><div class="legend"><span class="chip" style="background:#2A3A5F"></span>Unspecified · <b>0.0%</b></div></div>
+      </div>
+    </div>
+    <div class="card qa" style="flex:4;">
+      <h3>Country Metrics · Top 10 by Revenue</h3>
+      <div class="csub">customer-attributed revenue · ARPC = revenue ÷ customers</div>
+      <div style="flex:1;min-height:0;overflow:auto;">
+        <table>
+          <tr><th>Country</th><th>Customers</th><th>Revenue</th><th>ARPC</th><th>% of Total</th></tr>
+          <tr><td><b>United Kingdom</b></td><td class='num'>3,921</td><td class='num'>£8,979,620</td><td class='num'>£1,858</td><td class='num'>84.6%</td></tr><tr><td><b>Netherlands</b></td><td class='num'>9</td><td class='num'>£285,446</td><td class='num'>£31,716</td><td class='num'>2.7%</td></tr><tr><td><b>Eire</b></td><td class='num'>3</td><td class='num'>£283,141</td><td class='num'>£88,421</td><td class='num'>2.7%</td></tr><tr><td><b>Germany</b></td><td class='num'>94</td><td class='num'>£228,678</td><td class='num'>£2,433</td><td class='num'>2.2%</td></tr><tr><td><b>France</b></td><td class='num'>87</td><td class='num'>£209,625</td><td class='num'>£2,402</td><td class='num'>2.0%</td></tr><tr><td><b>Australia</b></td><td class='num'>9</td><td class='num'>£138,454</td><td class='num'>£15,384</td><td class='num'>1.3%</td></tr><tr><td><b>Spain</b></td><td class='num'>30</td><td class='num'>£61,559</td><td class='num'>£2,052</td><td class='num'>0.6%</td></tr><tr><td><b>Switzerland</b></td><td class='num'>21</td><td class='num'>£57,068</td><td class='num'>£2,688</td><td class='num'>0.5%</td></tr><tr><td><b>Belgium</b></td><td class='num'>25</td><td class='num'>£41,196</td><td class='num'>£1,648</td><td class='num'>0.4%</td></tr><tr><td><b>Sweden</b></td><td class='num'>8</td><td class='num'>£38,368</td><td class='num'>£4,796</td><td class='num'>0.4%</td></tr>
+        </table>
+      </div>
+    </div></div>
+  <div class="bottom">
+    <div class="card qa">
+      <h3>Top 15 Countries by Revenue</h3>
+      <div class="csub">share of total revenue · the top 15 markets drive 98.6% of revenue</div>
+      <div style="display:flex;gap:18px;flex:1;min-height:0;"><div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;">
+        <div style="display:flex;align-items:center;margin:2.5px 0;height:19px;">
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-right:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="United Kingdom">United Kingdom</div>
+          <div style="flex:1;background:#1B2A4A;border-radius:3px;height:12px;">
+            <div style="width:100.0%;height:12px;background:#F2C94C;border-radius:3px;"></div>
+          </div>
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-left:9px;white-space:nowrap;">£8,979,620 · 84.6%</div>
+        </div>
+        <div style="display:flex;align-items:center;margin:2.5px 0;height:19px;">
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-right:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="Germany">Germany</div>
+          <div style="flex:1;background:#1B2A4A;border-radius:3px;height:12px;">
+            <div style="width:2.5%;height:12px;background:#F2C94C;border-radius:3px;"></div>
+          </div>
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-left:9px;white-space:nowrap;">£228,678 · 2.2%</div>
+        </div>
+        <div style="display:flex;align-items:center;margin:2.5px 0;height:19px;">
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-right:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="Spain">Spain</div>
+          <div style="flex:1;background:#1B2A4A;border-radius:3px;height:12px;">
+            <div style="width:0.8%;height:12px;background:#F2C94C;border-radius:3px;"></div>
+          </div>
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-left:9px;white-space:nowrap;">£61,559 · 0.6%</div>
+        </div>
+        <div style="display:flex;align-items:center;margin:2.5px 0;height:19px;">
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-right:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="Sweden">Sweden</div>
+          <div style="flex:1;background:#1B2A4A;border-radius:3px;height:12px;">
+            <div style="width:0.8%;height:12px;background:#F2C94C;border-radius:3px;"></div>
+          </div>
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-left:9px;white-space:nowrap;">£38,368 · 0.4%</div>
+        </div>
+        <div style="display:flex;align-items:center;margin:2.5px 0;height:19px;">
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-right:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="Portugal">Portugal</div>
+          <div style="flex:1;background:#1B2A4A;border-radius:3px;height:12px;">
+            <div style="width:0.8%;height:12px;background:#F2C94C;border-radius:3px;"></div>
+          </div>
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-left:9px;white-space:nowrap;">£33,683 · 0.3%</div>
+        </div></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;">
+        <div style="display:flex;align-items:center;margin:2.5px 0;height:19px;">
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-right:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="Netherlands">Netherlands</div>
+          <div style="flex:1;background:#1B2A4A;border-radius:3px;height:12px;">
+            <div style="width:100.0%;height:12px;background:#F2C94C;border-radius:3px;"></div>
+          </div>
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-left:9px;white-space:nowrap;">£285,446 · 2.7%</div>
+        </div>
+        <div style="display:flex;align-items:center;margin:2.5px 0;height:19px;">
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-right:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="France">France</div>
+          <div style="flex:1;background:#1B2A4A;border-radius:3px;height:12px;">
+            <div style="width:73.4%;height:12px;background:#F2C94C;border-radius:3px;"></div>
+          </div>
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-left:9px;white-space:nowrap;">£209,625 · 2.0%</div>
+        </div>
+        <div style="display:flex;align-items:center;margin:2.5px 0;height:19px;">
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-right:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="Switzerland">Switzerland</div>
+          <div style="flex:1;background:#1B2A4A;border-radius:3px;height:12px;">
+            <div style="width:20.0%;height:12px;background:#F2C94C;border-radius:3px;"></div>
+          </div>
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-left:9px;white-space:nowrap;">£57,068 · 0.5%</div>
+        </div>
+        <div style="display:flex;align-items:center;margin:2.5px 0;height:19px;">
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-right:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="Japan">Japan</div>
+          <div style="flex:1;background:#1B2A4A;border-radius:3px;height:12px;">
+            <div style="width:13.1%;height:12px;background:#F2C94C;border-radius:3px;"></div>
+          </div>
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-left:9px;white-space:nowrap;">£37,416 · 0.4%</div>
+        </div>
+        <div style="display:flex;align-items:center;margin:2.5px 0;height:19px;">
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-right:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="Finland">Finland</div>
+          <div style="flex:1;background:#1B2A4A;border-radius:3px;height:12px;">
+            <div style="width:7.9%;height:12px;background:#F2C94C;border-radius:3px;"></div>
+          </div>
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-left:9px;white-space:nowrap;">£22,546 · 0.2%</div>
+        </div></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;">
+        <div style="display:flex;align-items:center;margin:2.5px 0;height:19px;">
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-right:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="Eire">Eire</div>
+          <div style="flex:1;background:#1B2A4A;border-radius:3px;height:12px;">
+            <div style="width:100.0%;height:12px;background:#F2C94C;border-radius:3px;"></div>
+          </div>
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-left:9px;white-space:nowrap;">£283,141 · 2.7%</div>
+        </div>
+        <div style="display:flex;align-items:center;margin:2.5px 0;height:19px;">
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-right:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="Australia">Australia</div>
+          <div style="flex:1;background:#1B2A4A;border-radius:3px;height:12px;">
+            <div style="width:48.9%;height:12px;background:#F2C94C;border-radius:3px;"></div>
+          </div>
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-left:9px;white-space:nowrap;">£138,454 · 1.3%</div>
+        </div>
+        <div style="display:flex;align-items:center;margin:2.5px 0;height:19px;">
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-right:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="Belgium">Belgium</div>
+          <div style="flex:1;background:#1B2A4A;border-radius:3px;height:12px;">
+            <div style="width:14.5%;height:12px;background:#F2C94C;border-radius:3px;"></div>
+          </div>
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-left:9px;white-space:nowrap;">£41,196 · 0.4%</div>
+        </div>
+        <div style="display:flex;align-items:center;margin:2.5px 0;height:19px;">
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-right:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="Norway">Norway</div>
+          <div style="flex:1;background:#1B2A4A;border-radius:3px;height:12px;">
+            <div style="width:12.8%;height:12px;background:#F2C94C;border-radius:3px;"></div>
+          </div>
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-left:9px;white-space:nowrap;">£36,165 · 0.3%</div>
+        </div>
+        <div style="display:flex;align-items:center;margin:2.5px 0;height:19px;">
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-right:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="Singapore">Singapore</div>
+          <div style="flex:1;background:#1B2A4A;border-radius:3px;height:12px;">
+            <div style="width:7.5%;height:12px;background:#F2C94C;border-radius:3px;"></div>
+          </div>
+          <div style="width:150px;font-size:11.5px;color:#EAF0F8;text-align:right;padding-left:9px;white-space:nowrap;">£21,279 · 0.2%</div>
+        </div></div></div>
+    </div></div>
+</div>
+<pre id="qa" style="display:none"></pre>
+
+<script>
+window.addEventListener('load', function () {
+  setTimeout(function () {
+    var out = [];
+    var vw = 1280, vh = 800;
+    var de = document.documentElement;
+    if (de.scrollWidth > vw + 1) out.push('OVERFLOW_X=' + (de.scrollWidth - vw) + 'px');
+    if (de.scrollHeight > vh + 1) out.push('OVERFLOW_Y=' + (de.scrollHeight - vh) + 'px');
+    document.querySelectorAll('.qa').forEach(function (el, i) {
+      var r = el.getBoundingClientRect();
+      var id = el.dataset.qa || el.className;
+      if (r.left < -0.5) out.push('LEFT<' + id + '=' + r.left.toFixed(1));
+      if (r.right > vw + 0.5) out.push('RIGHT>' + id + '=' + r.right.toFixed(1) + ' w=' + (r.right - r.left).toFixed(0));
+      if (r.top < -0.5) out.push('TOP<' + id + '=' + r.top.toFixed(1));
+      if (r.bottom > vh + 0.5) out.push('BOTTOM>' + id + '=' + r.bottom.toFixed(1) + ' h=' + (r.bottom - r.top).toFixed(0));
+    });
+    document.getElementById('qa').textContent = out.length ? out.join('\n') : 'QA_OK';
+    document.getElementById('qa').dataset.qa = out.length ? 'FAIL' : 'PASS';
+  }, 150);
+});
+</script>
+
+</body></html>
