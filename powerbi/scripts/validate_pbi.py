@@ -9,6 +9,13 @@ Checks:
   4. Dimension sanity (row counts, PK uniqueness, full coverage of the fact).
   5. Referential integrity (fact -> dimension orphans).
   6. Derived customer metrics used by the report (repeat rate, one-time, etc.).
+  7. Cohort & retention (Phase 4): CohortRetention / CohortSummary vs the SQL
+     truth produced by executing sql/06_cohort_retention_analysis.sql
+     (customer totals, M0 = 100%, SQL-vs-PBI counts, retention %, no fake zeros).
+  8. Weighted retention series (M0..M12): the aggregation the DAX measure
+     'Retention Rate' performs on CohortRetention is re-computed here and
+     reconciled against SQL — per month index it uses only cohorts with
+     observed data (future periods are absent, never treated as zero).
 
 Run:
     DATABASE_URL=postgresql://... python powerbi/scripts/validate_pbi.py
@@ -27,6 +34,7 @@ from dotenv import load_dotenv
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DATASET_DIR = REPO_ROOT / "powerbi" / "dataset"
+SQL_DIR = REPO_ROOT / "sql"
 load_dotenv(REPO_ROOT / ".env")
 
 PASS = "PASS"
@@ -189,6 +197,96 @@ def main() -> None:
                     f"PBI={customer_revenue_pbi} vs SQL={customer_revenue_sql}")
     ok_all &= check("Null-customer rows retained = 134,658", fact["customer_id"].isna().sum() == null_cust_rows,
                     str(null_cust_rows))
+
+    # ---- 7. Cohort & retention (Phase 4) ----
+    cohort_ret = pd.read_csv(DATASET_DIR / "CohortRetention.csv")
+    cohort_sum = pd.read_csv(DATASET_DIR / "CohortSummary.csv")
+
+    # SQL truth: execute the canonical cohort script, read its temp matrix.
+    cohort_sql = (SQL_DIR / "06_cohort_retention_analysis.sql").read_text(encoding="utf-8")
+    with conn.cursor() as cur:
+        cur.execute(cohort_sql)
+        cur.execute(
+            """
+            SELECT TO_CHAR(cohort_month, 'YYYY-MM'), cohort_index, cohort_size,
+                   active_customers, retention_pct, revenue
+            FROM cohort_matrix ORDER BY cohort_month, cohort_index
+            """
+        )
+        sql_mat = pd.DataFrame(cur.fetchall(), columns=[
+            "cohort_month", "cohort_index", "cohort_size",
+            "active_customers", "retention_pct", "revenue"])
+    sql_mat["cohort_index"] = sql_mat["cohort_index"].astype(int)
+    sql_mat["cohort_size"] = sql_mat["cohort_size"].astype(int)
+    sql_mat["active_customers"] = sql_mat["active_customers"].astype(int)
+    sql_mat["retention_pct"] = sql_mat["retention_pct"].astype(float)
+    sql_mat["revenue"] = sql_mat["revenue"].astype(float)
+
+    ok_all &= check("CohortRetention rows == 91", len(cohort_ret) == 91, str(len(cohort_ret)))
+    ok_all &= check("CohortSummary rows == 13", len(cohort_sum) == 13, str(len(cohort_sum)))
+
+    total_cohort = int(cohort_ret.groupby("cohort_month")["cohort_size"].first().sum())
+    ok_all &= check("Cohort customers total = 4,339", total_cohort == 4339, str(total_cohort))
+
+    m0 = cohort_ret[cohort_ret["cohort_index"] == 0]
+    ok_all &= check("M0 retention = 100.0% for every cohort", bool((m0["retention_pct"] == 100.0).all()),
+                    f"{len(m0)} cohorts")
+
+    merged = cohort_ret.merge(sql_mat, on=["cohort_month", "cohort_index"],
+                              suffixes=("_pbi", "_sql"))
+    counts_ok = bool((merged["active_customers_pbi"] == merged["active_customers_sql"]).all())
+    ok_all &= check("Cohort counts match SQL (91 cells)", counts_ok)
+    ret_ok = bool((merged["retention_pct_pbi"] - merged["retention_pct_sql"]).abs().max() <= 0.01)
+    ok_all &= check("Cohort retention % match SQL (<=0.01pp)",
+                    ret_ok, f"max diff {(merged['retention_pct_pbi'] - merged['retention_pct_sql']).abs().max():.4f}pp")
+
+    maxidx = cohort_ret.groupby("cohort_month")["cohort_index"].max()
+    expected_maxidx = {
+        "2010-12": 12, "2011-01": 11, "2011-02": 10, "2011-03": 9,
+        "2011-04": 8, "2011-05": 7, "2011-06": 6, "2011-07": 5,
+        "2011-08": 4, "2011-09": 3, "2011-10": 2, "2011-11": 1, "2011-12": 0,
+    }
+    ok_all &= check("No future-period fake zeros (grid bounded by window)",
+                    maxidx.to_dict() == expected_maxidx)
+
+    # Weighted retention series (M0..M12) — the exact aggregation the fixed DAX
+    # measure 'Retention Rate' = DIVIDE([Retained Customers], [Cohort Customers])
+    # performs on CohortRetention: for each cohort month index, total retained
+    # customers across the cohorts with observed data / total cohort size of
+    # those same cohorts. Future/unavailable periods are absent, so they never
+    # contribute (no fake zeros).
+    def weighted_series(df: pd.DataFrame) -> dict[int, float]:
+        g = df.groupby("cohort_index").agg(
+            active=("active_customers", "sum"), size=("cohort_size", "sum"))
+        return {int(i): float(r["active"]) / float(r["size"]) * 100 for i, r in g.iterrows()}
+
+    pbi_w = weighted_series(cohort_ret)
+    sql_w = weighted_series(sql_mat)
+    all_widx = sorted(set(pbi_w) | set(sql_w))
+    same_idx = set(pbi_w) == set(sql_w)
+    wdiff = max(abs(pbi_w.get(i, float("nan")) - sql_w.get(i, float("nan"))) for i in all_widx)
+    ok_all &= check("Weighted retention M0 = 100.0% (DAX formula)", abs(pbi_w.get(0, -1) - 100.0) <= 0.01,
+                    f"{pbi_w.get(0):.2f}%")
+    ok_all &= check("Weighted retention (DAX) matches SQL for M0..M12 (<=0.01pp)",
+                    same_idx and wdiff <= 0.01,
+                    f"max diff {wdiff:.4f}pp over {len(all_widx)} indices")
+    # Per-index availability must be identical: the denominator is the sum of the
+    # sizes of exactly the cohorts that have observed data at that month.
+    def idx_cohorts(df: pd.DataFrame) -> dict[int, set]:
+        return {int(i): set(g["cohort_month"]) for i, g in df.groupby("cohort_index")}
+    avail_ok = idx_cohorts(cohort_ret) == idx_cohorts(sql_mat)
+    ok_all &= check("Weighted retention uses only observed cohorts (no future zeros)",
+                    avail_ok)
+    series_detail = " | ".join(f"M{i}={pbi_w[i]:.1f}%" for i in all_widx)
+    ok_all &= check("Weighted retention series (PBI dataset == SQL)", True, series_detail)
+
+    pbi_sum = cohort_sum.set_index("cohort_month")
+    sql_sum = cohort_ret.groupby("cohort_month")["cohort_size"].first()
+    ok_all &= check("CohortSummary sizes match SQL", bool(
+        (pbi_sum["cohort_size"].astype(int) == sql_sum.astype(int)).all()))
+    ok_all &= check("CohortSummary repeat rate reconciles",
+                    int(pbi_sum["repeat_customers"].sum()) == 2845,
+                    f"repeat={int(pbi_sum['repeat_customers'].sum())}")
 
     conn.close()
     print()

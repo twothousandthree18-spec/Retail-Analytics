@@ -1,5 +1,5 @@
 """
-generate_preview.py — Render static HTML previews of the 5 Power BI pages using
+generate_preview.py — Render static HTML previews of the 6 Power BI pages using
 the validated powerbi/dataset CSVs. Outputs powerbi/previews/*.html + *.png.
 
 All figures are computed from the validated dataset at render time — nothing is
@@ -126,8 +126,11 @@ def page(title: str, section: str, subtitle: str, kpis: str, insight: str, main:
   .kpi {{ background: {NAVY2}; border-radius: 10px; padding: 11px 16px; flex: 1; min-width: 0; }}
   .kpi .lab {{ font-size: 10px; color: {MUTED}; letter-spacing: 0.6px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
   .kpi .val {{ font-size: 23px; font-weight: 700; color: {GOLD}; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+  .kpi .val.sm {{ font-size: 18px; }}
+  .kpi .val.xs {{ font-size: 15.5px; }}
   .kpi .val.flat {{ color: {TEXT}; }}
   .kpi .sub {{ font-size: 10.5px; color: {MUTED}; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+  .kpi .sub.sm {{ font-size: 9.5px; }}
   .insight {{ flex: none; height: 34px; background: {NAVY3}; border-left: 3px solid {GOLD}; border-radius: 6px; padding: 8px 14px; font-size: 12px; color: {TEXT}; display: flex; align-items: center; gap: 10px; overflow: hidden; }}
   .insight b {{ color: {GOLD}; letter-spacing: 0.5px; font-size: 10.5px; text-transform: uppercase; white-space: nowrap; }}
   .main {{ flex: 1; min-height: 0; display: flex; gap: 12px; }}
@@ -145,6 +148,11 @@ def page(title: str, section: str, subtitle: str, kpis: str, insight: str, main:
   .barfill {{ height: 4px; border-radius: 2px; background: {GOLD}; }}
   .chip {{ display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 7px; vertical-align: middle; }}
   .legend {{ font-size: 11.5px; line-height: 1.6; }}
+  .two {{ display: flex; gap: 16px; flex: 1; min-height: 0; }}
+  .mini {{ flex: 1; min-width: 0; }}
+  .mini table {{ font-size: 10px; }}
+  .mini th {{ padding: 3px 6px; font-size: 9.5px; }}
+  .mini td {{ padding: 3px 6px; font-size: 10px; }}
 </style></head><body>
 <div class="wrap">
   <div class="head">
@@ -164,8 +172,13 @@ def page(title: str, section: str, subtitle: str, kpis: str, insight: str, main:
 </body></html>"""
 
 
-def kpi(title: str, value: str, sub: str = "", flat=False) -> str:
-    vcls = "val" if not flat else "val flat"
+def kpi(title: str, value: str, sub: str = "", flat=False, vsize: str | None = None) -> str:
+    if vsize is None:
+        n = len(value)
+        vsize = "xs" if n > 18 else ("sm" if n > 13 else "")
+    vcls = "val flat" if flat else "val"
+    if vsize:
+        vcls += " " + vsize
     return f'<div class="kpi qa"><div class="lab">{title}</div><div class="{vcls}">{value}</div><div class="sub">{sub}</div></div>'
 
 
@@ -312,6 +325,44 @@ def svg_scatter(points, w=1208, h=BOTTOM_CHART_H) -> str:
         f'<text x="{w / 2}" y="{h - 5}" fill="{MUTED}" font-size="9.5" text-anchor="middle">Units sold (log) →   ·   {n} products shown</text>'
     )
     return f'<svg viewBox="0 0 {w} {h}" style="width:100%;height:100%">{grid}{circles}{labels}</svg>'
+
+
+def heat_color(v: float) -> str:
+    """Blend navy (0%) -> gold (100%) for the retention heatmap cells."""
+    t = max(0.0, min(1.0, v / 100.0))
+    r = round(42 + (242 - 42) * t)
+    g = round(58 + (201 - 58) * t)
+    b = round(95 + (76 - 95) * t)
+    return f"#{r:02X}{g:02X}{b:02X}"
+
+
+def heat_cell_style(v) -> str:
+    if pd.isna(v):
+        return "background:transparent;color:#93A4C3;"
+    t = v / 100.0
+    fg = "#FFFFFF" if t < 0.5 else "#1B2A4A"
+    return f"background:{heat_color(v)};color:{fg};"
+
+
+def svg_retention_decay(idx_list, wavg, best, w, h) -> str:
+    """Line chart of weighted-average retention by cohort index (0-100%)."""
+    pad_l, pad_r, pad_t, pad_b = 40, 12, 16, 26
+    vmax, vmin = 100.0, 0.0
+    span = vmax - vmin
+    px = lambda i: pad_l + i * (w - pad_l - pad_r) / max(len(idx_list) - 1, 1)
+    py = lambda v: pad_t + (1 - (v - vmin) / span) * (h - pad_t - pad_b)
+    grid = ""
+    for g in range(4):
+        gy = pad_t + g * (h - pad_t - pad_b) / 3
+        val = vmax - g * span / 3
+        grid += f'<line x1="{pad_l}" y1="{gy:.1f}" x2="{w - pad_r}" y2="{gy:.1f}" stroke="{NAVY3}" stroke-width="1"/><text x="{pad_l - 7}" y="{gy + 4:.1f}" fill="{MUTED}" font-size="10" text-anchor="end">{val:.0f}%</text>'
+    def series(vals, color):
+        pts = " ".join(f"{px(i):.1f},{py(v):.1f}" for i, v in enumerate(vals) if v is not None and math.isfinite(v))
+        dots = "".join(f'<circle cx="{px(i):.1f}" cy="{py(v):.1f}" r="2.6" fill="{color}"/>' for i, v in enumerate(vals) if v is not None and math.isfinite(v))
+        line = f'<polyline points="{pts}" fill="none" stroke="{color}" stroke-width="2.2"/>'
+        return line + dots
+    labels = "".join(f'<text x="{px(i):.1f}" y="{h - 8}" fill="{MUTED}" font-size="9.5" text-anchor="middle">M{i}</text>' for i in idx_list)
+    return f'<svg viewBox="0 0 {w} {h}" style="width:100%;height:100%">{grid}{series(wavg, GOLD)}{series(best, BLUE)}{labels}</svg>'
 
 
 def main() -> None:
@@ -601,6 +652,104 @@ def main() -> None:
         page("Geographic Performance", "Geographic Performance", "Where revenue comes from", kpis5,
              insight_html("Key Insight", f"<b>UK &amp; Ireland</b> generate <b>{pct(uk_ire / reg_tot)}</b> of revenue (the UK alone {pct(uk_share)}); <b>Eire</b> has the highest average revenue per customer at {gbp0(eire_arpc) if eire_arpc else 'n/a'}."),
              main5, bottom5), encoding="utf-8")
+
+    # ---------------- Page 6 — Customer Retention (Cohort Analysis) ----------------
+    cohort = pd.read_csv(DS / "CohortRetention.csv")
+    csum = pd.read_csv(DS / "CohortSummary.csv").set_index("cohort_month")
+
+    cohort_idx = sorted(cohort["cohort_index"].unique())
+    max_idx = int(cohort_idx[-1])
+    cohort_months = sorted(cohort["cohort_month"].unique())
+    total_cohort_customers = int(csum["cohort_size"].sum())
+    m1_num = int(cohort[cohort["cohort_index"] == 1]["active_customers"].sum())
+    m1_den = int(cohort[cohort["cohort_index"] == 1]["cohort_size"].sum())
+    wavg_m1 = m1_num / m1_den if m1_den else 0.0
+    m6_num = int(cohort[cohort["cohort_index"] == 6]["active_customers"].sum())
+    m6_den = int(cohort[cohort["cohort_index"] == 6]["cohort_size"].sum())
+    wavg_m6 = m6_num / m6_den if m6_den else 0.0
+    wavg_by_idx = {
+        i: float(cohort[cohort["cohort_index"] == i]["active_customers"].sum())
+        / float(cohort[cohort["cohort_index"] == i]["cohort_size"].sum())
+        for i in cohort_idx
+    }
+    best_cohort = cohort[cohort["cohort_index"] == 1].sort_values("retention_pct", ascending=False).iloc[0]
+    best_m = best_cohort["cohort_month"]
+    best_m1 = float(best_cohort["retention_pct"])
+    founding_share = float(csum.loc["2010-12", "lifetime_revenue"]) / float(csum["lifetime_revenue"].sum())
+    total_repeat = int(csum["repeat_customers"].sum())
+    total_lt_rev = float(csum["lifetime_revenue"].sum())
+    rev_per_cust_avg = total_lt_rev / total_cohort_customers
+
+    pivot = cohort.pivot_table(index="cohort_month", columns="cohort_index", values="retention_pct")
+    hm_rows = ""
+    for cm in cohort_months:
+        row = pivot.loc[cm]
+        cells = f'<td style="text-align:right;padding:2px 6px;font-size:9.5px;color:{MUTED};white-space:nowrap;"><b>{cm}</b></td>'
+        cells += f'<td style="text-align:right;padding:2px 4px;font-size:9.5px;color:{TEXT};">{int(cohort[cohort["cohort_month"] == cm]["cohort_size"].iloc[0])}</td>'
+        for i in range(max_idx + 1):
+            v = row.get(i)
+            cells += f'<td style="padding:2px 1px;text-align:center;font-size:9px;border-radius:2px;{heat_cell_style(v)}">{f"{v:.0f}" if pd.notna(v) else "·"}</td>'
+        hm_rows += f"<tr>{cells}</tr>"
+    hm_headers = "".join(f"<th>M{i}</th>" for i in range(max_idx + 1))
+    heatmap = f"""
+    <div class="card qa" style="flex:3;">
+      <h3>Cohort Retention Heatmap</h3>
+      <div class="csub">% of cohort customers active in each period · M0 = acquisition month = 100% · blank = future</div>
+      <div style="flex:1;min-height:0;overflow:auto;">
+        <table style="border-collapse:collapse;font-size:9px;width:100%;">
+          <tr style="position:sticky;top:0;background:{NAVY2};"><th style="text-align:right;padding:2px 6px;font-size:9px;color:{MUTED};">Cohort</th><th style="text-align:right;padding:2px 4px;font-size:9px;color:{MUTED};">N</th>{hm_headers}</tr>
+          {hm_rows}
+        </table>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:9px;color:{MUTED};">
+          <span>0%</span><span style="flex:1;height:6px;border-radius:3px;background:linear-gradient(90deg,{NAVY3},{GOLD});"></span><span>100%</span>
+        </div>
+      </div>
+    </div>"""
+    dec_svg = svg_retention_decay(cohort_idx, [wavg_by_idx[i] * 100 for i in cohort_idx], [float(pivot.loc[best_m].get(i, float("nan"))) for i in cohort_idx], w=W2, h=CHART_H)
+    right6 = f"""
+    <div class="card qa" style="flex:2;">
+      <h3>Retention Decay · % of cohort active by month</h3>
+      <div class="csub"><span class="chip" style="background:{GOLD}"></span>weighted avg across cohorts with data · <span class="chip" style="background:{BLUE}"></span>{best_m} cohort</div>
+      <div class="chart">{dec_svg}</div>
+    </div>"""
+    main6 = heatmap + right6
+    def mini_table(months: list[str]) -> str:
+        rows = ""
+        for cm in months:
+            s = csum.loc[cm]
+            rows += (
+                f"<tr><td><b>{cm}</b></td><td class='num'>{num(int(s['cohort_size']))}</td>"
+                f"<td class='num'>{pct(float(s['repeat_rate_pct']) / 100)}</td>"
+                f"<td class='num'>{gbp0(float(s['lifetime_revenue']))}</td>"
+                f"<td class='num'>{gbp0(float(s['revenue_per_customer']))}</td></tr>"
+            )
+        return (
+            f"<table>"
+            f"<tr><th>Cohort</th><th>Customers</th><th>Repeat Rate</th><th>Lifetime Revenue</th><th>Rev / Customer</th></tr>"
+            f"{rows}</table>"
+        )
+    half = (len(cohort_months) + 1) // 2
+    bottom6 = f"""
+    <div class="card qa" style="height:100%;">
+      <h3>Cohort Lifecycle Summary</h3>
+      <div class="csub">all {len(cohort_months)} cohorts shown · repeat = ever purchased after first purchase month · {num(total_cohort_customers)} customers · {gbp(total_lt_rev)} lifetime revenue</div>
+      <div class="two">
+        <div class="mini">{mini_table(cohort_months[:half])}</div>
+        <div class="mini">{mini_table(cohort_months[half:])}</div>
+      </div>
+    </div>"""
+    kpis6 = (
+        kpi("Total Customers", num(total_cohort_customers), f"{num(len(cohort_months))} monthly cohorts")
+        + kpi("Repeat Customer Rate", pct(total_repeat / total_cohort_customers), f"{num(total_repeat)} of {num(total_cohort_customers)} repurchased")
+        + kpi("Avg 1-Month Retention", pct(wavg_m1), f"{num(m1_num)} of {num(m1_den)} return in M1")
+        + kpi("Avg 6-Month Retention", pct(wavg_m6), f"{num(m6_num)} of {num(m6_den)} reach M6")
+        + kpi("Best 1-Month Retention", f"{best_m} · {pct(best_m1 / 100)}", "cohort with the highest M1")
+        + kpi("Founding Cohort Revenue", pct(founding_share), f"{gbp0(float(csum.loc['2010-12', 'lifetime_revenue']))} attributed")
+    )
+    (OUT / "page6_customer_retention.html").write_text(
+        page("Customer Retention", "Cohort & Retention", "How many customers come back · customer cohorts by first purchase month", kpis6,
+             insight_html("Key Insight", f"The <b>{best_m} founding cohort</b> is the strongest by far — M1 retention {pct(best_m1 / 100)}, repeat rate {pct(float(csum.loc[best_m, 'repeat_rate_pct']) / 100)}, and it alone drives <b>{pct(founding_share)}</b> of customer-attributed revenue ({gbp0(total_lt_rev)} total). Retention plateaus around 20–30% from M2 onward rather than decaying to zero."),
+             main6, bottom6), encoding="utf-8")
 
     print("previews written to powerbi/previews/")
     print("revenue=%.2f orders=%d customers=%d units=%d attributed=%.2f" % (revenue, orders, customers, units, attributed))

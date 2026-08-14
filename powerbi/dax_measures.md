@@ -4,7 +4,10 @@ All measures belong to a dedicated **Measures** (a.k.a. *Report Measures*) table
 Column references are fully qualified; adjust names if the imported tables are
 renamed. The measures are written so the **FactSales** filter propagates through
 the star-schema relationships (DimDate → FactSales, DimCustomer → FactSales,
-DimProduct → FactSales, DimCountry → FactSales).
+DimProduct → FactSales, DimCountry → FactSales). The Phase 4 cohort measures
+(section 6) read the standalone **CohortRetention** / **CohortSummary** tables
+directly — they are pre-aggregated in SQL and are filtered only by their own
+columns.
 
 ---
 
@@ -130,6 +133,68 @@ RETURN DIVIDE(SUMX(_top, [@Rev]), _rev)
 
 ---
 
+## 6. Cohort & Retention (Phase 4 — reads CohortRetention / CohortSummary)
+
+The six cohort measures read the two standalone cohort tables (see
+`data_model.md`). They are filtered only by the cohort tables' own columns
+(`cohort_month`, `cohort_index`, …); use the heatmap matrix (rows =
+`CohortRetention[cohort_month]`, columns = `CohortRetention[cohort_index]`) with
+these measures.
+
+```dax
+Cohort Customers =
+    SUMX(VALUES(CohortRetention[cohort_month]),
+         CALCULATE(MAX(CohortRetention[cohort_size])))
+
+Retained Customers =
+    SUM(CohortRetention[active_customers])
+
+Retention Rate =
+    DIVIDE([Retained Customers], [Cohort Customers])
+
+Cohort Repeat Customer Rate =
+    DIVIDE(SUM(CohortSummary[repeat_customers]), SUM(CohortSummary[cohort_size]))
+
+Revenue by Cohort =
+    SUM(CohortRetention[revenue])
+
+Revenue per Cohort Customer =
+    DIVIDE([Revenue by Cohort], [Cohort Customers])
+```
+
+> **Why `Cohort Customers` uses SUMX + MAX:** `cohort_size` repeats on every row
+> of a cohort (one row per M0..M12), so a plain `SUM` would overcount
+> (36,807 instead of 4,339). `SUMX(VALUES(...), MAX(...))` returns the true total.
+>
+> **`Retention Rate` is the weighted retention** at each cohort month:
+>
+> ```text
+> weighted retention at month N =
+>     SUM(active_customers) across cohorts with observed data at N
+>   ÷ SUM(cohort_size) across those same cohorts
+> ```
+>
+> It is deliberately **not** `AVERAGE(CohortRetention[retention_pct])` (an
+> unweighted mean). Because the chart is drawn over `cohort_index`, the
+> denominator uses only the cohorts that actually have a row for that month —
+> future/unavailable periods are absent from the table and therefore never
+> contribute a zero. In a heatmap cell (one cohort × one month) the measure
+> equals that cell's `retention_pct`; over an M-line it is the cohort-size
+> weighted value. M0 is 100% by construction. Validated against SQL/Pandas for
+> M0..M12 (max deviation 0.00 pp).
+>
+> **`Cohort Repeat Customer Rate`** is named to avoid clashing with the existing
+> **`Repeat Customer Rate`** (section 3); it uses the **cohort** definition of
+> repeat (customer active in ≥2 calendar months) from `CohortSummary`, not the
+> invoice-count definition.
+>
+> **Validated figures:** total cohort customers **4,339** (matches `Total
+> Customers`), weighted M1 retention **22.7%**, cohort repeat rate **65.5%**,
+> cohort lifetime revenue **£8,887,208.89** (matches **Customer Revenue** —
+> both are attributed-only), founding-cohort revenue per customer **£5,087**.
+
+---
+
 ## Measure Table Layout (suggested grouping)
 
 | Group            | Measures |
@@ -139,3 +204,4 @@ RETURN DIVIDE(SUMX(_top, [@Rev]), _rev)
 | Customer         | Repeat Customer Rate, Repeat Customer Count, One-Time Customer Count, Avg Frequency, Avg Recency, Avg Monetary, Avg RFM Score, Customer Lifetime, Segment Revenue Share % |
 | Time             | Previous Month Revenue, MoM Revenue Growth %, Running Revenue YTD, Revenue vs Same Period Last Year, YoY Revenue Growth % |
 | Ranking          | Product Revenue Rank, Country Revenue Rank, Top 10% Customer Revenue Share |
+| Cohort           | Cohort Customers, Retained Customers, Retention Rate, Cohort Repeat Customer Rate, Revenue by Cohort, Revenue per Cohort Customer |

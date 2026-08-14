@@ -1,9 +1,10 @@
 # Power BI — Data Model
 
-Star schema, 1 fact table + 4 dimension tables, built from the **validated
-PostgreSQL source** (`retail_transactions`, 527,390 rows). No cleaning or
-recalculation was performed in the Power BI layer; all numbers trace back to the
-validated SQL / Excel pipeline.
+Star schema, 1 fact table + 4 dimension tables, **plus 2 standalone Phase 4
+cohort tables**, built from the **validated PostgreSQL source**
+(`retail_transactions`, 527,390 rows). No cleaning or recalculation was performed
+in the Power BI layer; all numbers trace back to the validated SQL / Excel
+pipeline.
 
 ```
                          DimDate
@@ -76,6 +77,40 @@ of description, upper-cased; 831 values).
 | Americas | Canada, Usa, Brazil |
 | Unspecified | Unspecified |
 
+### CohortRetention (91 rows — Phase 4, standalone)
+Retention matrix in long form (one row per cohort-month), computed in SQL
+(`sql/06_cohort_retention_analysis.sql`) and validated against an independent
+pandas implementation (`sql/cohort_validation.py`, 12/12 PASS).
+
+| Column | Type | Notes |
+|--------|------|-------|
+| cohort_month | Text | First-purchase month of the customer cohort (2010-12 … 2011-12) |
+| cohort_index | Integer | Months since cohort start, M0 … M12 (M0 = signup month) |
+| cohort_size | Integer | Customers in the cohort (repeated per row; use `MAX` over cohort_month) |
+| active_customers | Integer | Customers with ≥1 transaction in that cohort month |
+| retention_pct | Decimal | active ÷ cohort_size × 100 (M0 = 100.0 by construction) |
+| revenue | Decimal | Revenue (attributed) generated in that cohort month |
+
+Only months within the data window exist — **future months are absent, never
+fake 0%** (e.g. 2011-12 has only M0). Import as a table; no relationship needed.
+
+### CohortSummary (13 rows — Phase 4, standalone)
+One row per cohort with the lifecycle summary used on the retention page and in
+`reports/cohort_insights_report.md`.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| cohort_month | Text | First-purchase month (2010-12 … 2011-12) |
+| cohort_size | Integer | 4,339 total across all cohorts |
+| repeat_customers | Integer | Customers with >1 purchase month |
+| repeat_rate | Decimal | Repeat customers ÷ cohort size × 100 |
+| lifetime_revenue | Currency | Attributed revenue from all cohort customers (full lifetime) |
+| revenue_per_customer | Currency | Lifetime revenue ÷ cohort size |
+| avg_orders_per_customer | Decimal | Distinct invoices ÷ cohort size |
+| avg_active_months | Decimal | Months in which the customer transacted |
+| avg_lifetime_days | Decimal | Last purchase − first purchase (≥0) |
+| longest_lifetime_days | Integer | Max lifetime days in the cohort |
+
 ## Relationships
 | From (1) | To (many) | Cardinality | Filter direction |
 |----------|-----------|-------------|------------------|
@@ -85,15 +120,22 @@ of description, upper-cased; 831 values).
 | DimCountry[country] | FactSales[country] | One-to-many | Single |
 
 All relationships are single-direction (dimension → fact), which is the
-recommended star-schema pattern and keeps cross-filtering deterministic.
+recommended star-schema pattern and keeps cross-filtering deterministic. The
+cohort tables are intentionally **unrelated** — they are pre-aggregated in SQL
+and are filtered only by their own columns (the 6 cohort measures read them
+directly, e.g. `Retention Rate` = `DIVIDE(SUM(active_customers),
+SUM(cohort_size))` over the visible cohort-month rows — the cohort-size weighted
+retention, not an unweighted mean).
 
 ## Loading the dataset in Power BI Desktop (Get Data → Text/CSV)
 1. **FactSales.csv** — set `total_price` to **Currency**, `invoice_date` to **Datetime**, `quantity` to **Whole Number**.
 2. **DimDate.csv** — set `date` to **Date**; mark as **Date Table** (Table tools).
 3. **DimCustomer.csv** — set `monetary` to **Currency**, `recency_days`/`frequency`/scores to **Whole Number**, `is_repeat` to **Whole Number**.
 4. **DimProduct.csv** / **DimCountry.csv** — defaults; `country`/`stock_code` text.
-5. Create the four relationships as above.
-6. Put measures (see `dax_measures.md`) in a dedicated **Measures** table.
+5. **CohortRetention.csv** — set `revenue` to **Currency**, `retention_pct` to **Decimal**, `cohort_index`/`cohort_size`/`active_customers` to **Whole Number**.
+6. **CohortSummary.csv** — set currency columns to **Currency**, everything else numeric (integers/decimal).
+7. Create the four relationships as above.
+8. Put measures (see `dax_measures.md`) in a dedicated **Measures** table.
 
 Alternative source: if direct CSV import is preferred over the exported files,
 connect Power BI directly to PostgreSQL (`retail_transactions`) and define the

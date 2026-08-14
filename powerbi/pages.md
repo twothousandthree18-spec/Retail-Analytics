@@ -1,9 +1,9 @@
 # Power BI — Report Page Specifications
 
-5 interactive pages. All pages share report-level **slicers**: Date range
-(DimDate[date]), **RFM Segment** (DimCustomer[segment]), **Region**
-(DimCountry[region]) and **Product Category** (DimProduct[category]). Slicers
-are synced across pages; every visual is clickable for cross-filtering.
+6 report pages (+ 1 drill-through target). All pages share report-level
+**slicers**: Date range (DimDate[date]), **RFM Segment** (DimCustomer[segment]),
+**Region** (DimCountry[region]) and **Product Category** (DimProduct[category]).
+Slicers are synced across pages; every visual is clickable for cross-filtering.
 
 ## Design language (applied to all pages)
 
@@ -153,7 +153,38 @@ are pixel-checked (fixed 1280×800, zero element overflow).
 
 ---
 
-## Page 6 — Product Detail (drill-through, optional)
+## Page 6 — Customer Retention (Cohort Analysis)
+
+*Purpose: how long do customers stay, and how much is each cohort worth over
+time. Data source: `CohortRetention` + `CohortSummary` (Phase 4).*
+
+| Area | Visual | Fields / Measure |
+|------|--------|------------------|
+| KPI row (6 cards) | Card | **Total Customers** (4,339), **Repeat Customer Rate** (65.57%), **Avg 1-Month Retention** (22.7%), **Avg 6-Month Retention** (27.2%), **Best 1-Month Retention** (2010-12 · 36.6%), **Founding Cohort Revenue** (50.7% · £4,502,010 attributed) |
+| Retention heatmap | Matrix | Rows = CohortRetention[cohort_month]; Columns = CohortRetention[cohort_index] (M0…M12); Values = **Retention Rate** (colour-graded navy→gold) |
+| Retention decay | Line chart | X = CohortRetention[cohort_index]; Y = **Retention Rate** (gold = cohort-size weighted avg across cohorts with observed data; blue = founding 2010-12 cohort) |
+| Cohort lifecycle | Table | All 13 cohorts in two compact side-by-side tables (labelled "all 13 cohorts shown"): Cohort, Customers, Repeat Rate, Lifetime Revenue, Revenue per Customer |
+| Insight | Text callout | "Retention settles at 26–30% from month 3; the founding Dec 2010 cohort rebounded to 50.3% at M11 (peak season) and drives 50.7% of cohort revenue." |
+
+> **Provenance:** all cohort numbers are computed in SQL
+> (`sql/06_cohort_retention_analysis.sql`), validated against an independent
+> pandas implementation (`sql/cohort_validation.py`, 12/12 PASS), and imported as
+> the standalone `CohortRetention` / `CohortSummary` tables — **no relationship
+> to the fact table**. M0 = **100.0%** by construction; **future months are
+> blank** (never 0%) because they don't exist yet — the matrix renders them as
+> "·". Heatmap cells on the page read 100.0% for every cohort's first column.
+>
+> **Weighted-retention definition (decay line, must not be an unweighted
+> average):** at each cohort month N, `Retention Rate` =
+> `SUM(active_customers) ÷ SUM(cohort_size)` computed over **only the cohorts
+> with observed data at N** — future/unavailable periods are absent and are
+> never treated as zero. This is the same aggregation validated against
+> SQL/Pandas for M0..M12 (`validate_pbi.py`, max deviation 0.00 pp). KPI values
+> and subtitles are sized to render fully at the 1280×800 canvas (no truncation).
+
+---
+
+## Page 7 — Product Detail (drill-through, optional)
 
 Target page reachable from Page 4 rows:
 - Drill-through field: `DimProduct[stock_code]`
@@ -167,8 +198,9 @@ Target page reachable from Page 4 rows:
 1. **Slicers** (top band, all pages): Date range, RFM Segment, Region, Product Category.
 2. **Cross-filtering** enabled on all visuals; **cross-highlight** kept on.
 3. **Tooltips**: every chart exposes Revenue/Orders/Units under the hovered slice.
-4. **Page navigation**: left rail with 6 icons (Overview, Sales & Trends,
-   Customer Intelligence, Product Performance, Geographic Performance, Product Detail).
+4. **Page navigation**: left rail with 7 icons (Overview, Sales & Trends,
+   Customer Intelligence, Product Performance, Geographic Performance,
+   Customer Retention, Product Detail).
 5. **Number formatting** consistent: currency `£`, counts with thousands separators,
    percentages `0.0%` (growth can be `+0.0%;-0.0%`).
 
@@ -179,4 +211,4 @@ Target page reachable from Page 4 rows:
 - Every metric has one definition used across pages (e.g. Total Revenue is
   always £10,619,986.68; "attributed" figures are always labelled as such).
 - No duplicate analysis: weekday → Page 2 only; region/country economics →
-  Page 5 only; RFM segments → Pages 1 & 3 only.
+  Page 5 only; RFM segments → Pages 1 & 3 only; cohort retention → Page 6 only.

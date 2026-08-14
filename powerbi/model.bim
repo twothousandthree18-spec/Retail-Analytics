@@ -7,6 +7,172 @@
     "sourceQueryCulture": "en-US",
     "tables": [
       {
+        "name": "CohortRetention",
+        "columns": [
+          {
+            "name": "cohort_month",
+            "dataType": "string",
+            "sourceColumn": "cohort_month",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "cohort_index",
+            "dataType": "int64",
+            "sourceColumn": "cohort_index",
+            "formatString": "0",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "cohort_size",
+            "dataType": "int64",
+            "sourceColumn": "cohort_size",
+            "formatString": "#,##0",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "active_customers",
+            "dataType": "int64",
+            "sourceColumn": "active_customers",
+            "formatString": "#,##0",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "retention_pct",
+            "dataType": "decimal",
+            "sourceColumn": "retention_pct",
+            "formatString": "0.0",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "revenue",
+            "dataType": "decimal",
+            "sourceColumn": "revenue",
+            "formatString": "£#,##0.00",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "CohortRetention",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(DatasetFolder & \"/CohortRetention.csv\"),[Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    #\"Promoted Headers\" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    #\"Changed Type\" = Table.TransformColumnTypes(#\"Promoted Headers\",{{\"cohort_month\", type text}, {\"cohort_index\", Int64.Type}, {\"cohort_size\", Int64.Type}, {\"active_customers\", Int64.Type}, {\"retention_pct\", type number}, {\"revenue\", type number}})",
+                "in",
+                "    #\"Changed Type\""
+              ]
+            },
+            "annotations": [
+              {
+                "name": "PBI_ResultType",
+                "value": "Table"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "CohortSummary",
+        "columns": [
+          {
+            "name": "cohort_month",
+            "dataType": "string",
+            "sourceColumn": "cohort_month",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "cohort_size",
+            "dataType": "int64",
+            "sourceColumn": "cohort_size",
+            "formatString": "#,##0",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "repeat_customers",
+            "dataType": "int64",
+            "sourceColumn": "repeat_customers",
+            "formatString": "#,##0",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "one_time_customers",
+            "dataType": "int64",
+            "sourceColumn": "one_time_customers",
+            "formatString": "#,##0",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "repeat_rate_pct",
+            "dataType": "decimal",
+            "sourceColumn": "repeat_rate_pct",
+            "formatString": "0.0",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "lifetime_revenue",
+            "dataType": "decimal",
+            "sourceColumn": "lifetime_revenue",
+            "formatString": "£#,##0.00",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "revenue_per_customer",
+            "dataType": "decimal",
+            "sourceColumn": "revenue_per_customer",
+            "formatString": "£#,##0.00",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "avg_orders_per_customer",
+            "dataType": "decimal",
+            "sourceColumn": "avg_orders_per_customer",
+            "formatString": "0.0",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "avg_active_months",
+            "dataType": "decimal",
+            "sourceColumn": "avg_active_months",
+            "formatString": "0.0",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "avg_lifetime_days",
+            "dataType": "decimal",
+            "sourceColumn": "avg_lifetime_days",
+            "formatString": "#,##0",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "CohortSummary",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(DatasetFolder & \"/CohortSummary.csv\"),[Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    #\"Promoted Headers\" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    #\"Changed Type\" = Table.TransformColumnTypes(#\"Promoted Headers\",{{\"cohort_month\", type text}, {\"cohort_size\", Int64.Type}, {\"repeat_customers\", Int64.Type}, {\"one_time_customers\", Int64.Type}, {\"repeat_rate_pct\", type number}, {\"lifetime_revenue\", type number}, {\"revenue_per_customer\", type number}, {\"avg_orders_per_customer\", type number}, {\"avg_active_months\", type number}, {\"avg_lifetime_days\", type number}})",
+                "in",
+                "    #\"Changed Type\""
+              ]
+            },
+            "annotations": [
+              {
+                "name": "PBI_ResultType",
+                "value": "Table"
+              }
+            ]
+          }
+        ]
+      },
+      {
         "name": "DimCountry",
         "columns": [
           {
@@ -608,6 +774,52 @@
             "expression": "VAR _rev = CALCULATE([Total Revenue], NOT ISBLANK(FactSales[customer_id])) VAR _cust = SUMMARIZE(FactSales, DimCustomer[customer_id], \"@Rev\", [Total Revenue]) VAR _ranked = ADDCOLUMNS(_cust, \"@Rnk\", RANKX(_cust, [@Rev], , DESC)) VAR _topN = ROUND(COUNTROWS(_ranked) * 0.10, 0) VAR _top = FILTER(_ranked, [@Rnk] <= _topN) RETURN DIVIDE(SUMX(_top, [@Rev]), _rev)",
             "formatString": "0.0%",
             "displayFolder": "5. Ranking"
+          },
+          {
+            "name": "Cohort Customers",
+            "description": "Customers acquired in the cohort month (cohort = first purchase month).",
+            "expression": "SUMX(VALUES(CohortRetention[cohort_month]), CALCULATE(MAX(CohortRetention[cohort_size])))",
+            "formatString": "#,##0",
+            "displayFolder": "6. Cohort"
+          },
+          {
+            "name": "Retained Customers",
+            "description": "Customers from the cohort who were active in the period (one row per cohort month x cohort index).",
+            "expression": "SUM(CohortRetention[active_customers])",
+            "formatString": "#,##0",
+            "displayFolder": "6. Cohort"
+          },
+          {
+            "name": "Retention Rate",
+            "description": [
+              "Weighted retention at each cohort month: retained customers across the cohorts",
+              "with observed data, divided by cohort customers in those same cohorts. Future",
+              "periods are absent from the table, so they never render as 0%. M0 is 100% by construction."
+            ],
+            "expression": "DIVIDE([Retained Customers], [Cohort Customers])",
+            "formatString": "0.0%",
+            "displayFolder": "6. Cohort"
+          },
+          {
+            "name": "Cohort Repeat Customer Rate",
+            "description": "Share of cohort customers who ever returned after their first purchase month.",
+            "expression": "AVERAGE(CohortSummary[repeat_rate_pct])",
+            "formatString": "0.0%",
+            "displayFolder": "6. Cohort"
+          },
+          {
+            "name": "Revenue by Cohort",
+            "description": "Revenue generated by cohort customers in each cohort period.",
+            "expression": "SUM(CohortRetention[revenue])",
+            "formatString": "£#,##0.00",
+            "displayFolder": "6. Cohort"
+          },
+          {
+            "name": "Revenue per Cohort Customer",
+            "description": "Revenue generated by cohort customers in the period, per cohort customer.",
+            "expression": "DIVIDE(SUM(CohortRetention[revenue]), [Cohort Customers])",
+            "formatString": "£#,##0.00",
+            "displayFolder": "6. Cohort"
           }
         ]
       }

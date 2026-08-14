@@ -8,11 +8,15 @@ methodology already validated in `sql/05_advanced_analytics.sql` (including the
 `customer_id` tie-breaker that produces 100% agreement with the workbook).
 
 Output (powerbi/dataset/):
-    FactSales.csv   527,390 rows  one row per transaction line item
-    DimDate.csv      730 rows     daily calendar 2010-01-01 .. 2011-12-31
-    DimCustomer.csv  4,339 rows   customer + validated RFM scores/segment
-    DimProduct.csv   3,947 rows   product attributes + category
-    DimCountry.csv      38 rows   country + region grouping
+    FactSales.csv       527,390 rows  one row per transaction line item
+    DimDate.csv            730 rows   daily calendar 2010-01-01 .. 2011-12-31
+    DimCustomer.csv      4,339 rows   customer + validated RFM scores/segment
+    DimProduct.csv       3,947 rows   product attributes + category
+    DimCountry.csv          38 rows   country + region grouping
+    CohortRetention.csv     91 rows   cohort retention matrix (long form,
+                                      Phase 4) - same logic as
+                                      sql/06_cohort_retention_analysis.sql
+    CohortSummary.csv       13 rows   per-cohort acquisition + lifetime metrics
 
 Run:
     DATABASE_URL=postgresql://... python powerbi/scripts/export_pbi_dataset.py
@@ -214,6 +218,122 @@ def export_dim_country(conn) -> pd.DataFrame:
     return df
 
 
+COHORT_WINDOW_END = "2011-12-01"
+
+
+def export_cohort_retention(conn) -> pd.DataFrame:
+    """Cohort retention matrix (long form) — mirrors sql/06 (Phase 4).
+
+    One row per (cohort_month, cohort_index) inside the observation window.
+    Months beyond the window are not emitted, so Power BI renders them blank,
+    not as a false 0%. retention_pct = customers active in month N / cohort size.
+    """
+    print("[6/7] CohortRetention ...", flush=True)
+    return pd.read_sql(
+        f"""
+        WITH cohorts AS (
+            SELECT customer_id,
+                   DATE_TRUNC('month', MIN(invoice_date))::date AS cohort_month
+            FROM retail_transactions
+            WHERE customer_id IS NOT NULL
+            GROUP BY customer_id
+        ),
+        sizes AS (
+            SELECT cohort_month, COUNT(*) AS size FROM cohorts GROUP BY cohort_month
+        ),
+        avail AS (
+            SELECT s.cohort_month,
+                   s.size,
+                   x.cohort_index
+            FROM sizes s,
+                 LATERAL (
+                     SELECT generate_series(
+                                0,
+                                (EXTRACT(YEAR FROM DATE '{COHORT_WINDOW_END}') * 12
+                                   + EXTRACT(MONTH FROM DATE '{COHORT_WINDOW_END}'))
+                              - (EXTRACT(YEAR FROM s.cohort_month) * 12
+                                   + EXTRACT(MONTH FROM s.cohort_month))
+                     )::int AS cohort_index
+                 ) x
+        ),
+        activity AS (
+            SELECT t.customer_id,
+                   c.cohort_month,
+                   ((EXTRACT(YEAR FROM DATE_TRUNC('month', t.invoice_date)) * 12
+                       + EXTRACT(MONTH FROM DATE_TRUNC('month', t.invoice_date)))
+                    - (EXTRACT(YEAR FROM c.cohort_month) * 12
+                       + EXTRACT(MONTH FROM c.cohort_month)))::int AS cohort_index,
+                   t.total_price
+            FROM retail_transactions t
+            JOIN cohorts c USING (customer_id)
+        ),
+        counts AS (
+            SELECT cohort_month,
+                   cohort_index,
+                   COUNT(DISTINCT customer_id) AS active_customers,
+                   ROUND(SUM(total_price), 2)  AS revenue
+            FROM activity
+            GROUP BY cohort_month, cohort_index
+        )
+        SELECT TO_CHAR(a.cohort_month, 'YYYY-MM')    AS cohort_month,
+               a.cohort_index,
+               a.size                                AS cohort_size,
+               COALESCE(c.active_customers, 0)       AS active_customers,
+               ROUND(100.0 * COALESCE(c.active_customers, 0) / a.size, 2)
+                                                      AS retention_pct,
+               COALESCE(c.revenue, 0)                AS revenue
+        FROM avail a
+        LEFT JOIN counts c USING (cohort_month, cohort_index)
+        ORDER BY a.cohort_month, a.cohort_index
+        """,
+        conn,
+    )
+
+
+def export_cohort_summary(conn) -> pd.DataFrame:
+    """Per-cohort acquisition + lifetime metrics (Phase 4)."""
+    print("[7/7] CohortSummary ...", flush=True)
+    return pd.read_sql(
+        """
+        WITH cohorts AS (
+            SELECT customer_id,
+                   DATE_TRUNC('month', MIN(invoice_date))::date AS cohort_month
+            FROM retail_transactions
+            WHERE customer_id IS NOT NULL
+            GROUP BY customer_id
+        ),
+        base AS (
+            SELECT customer_id,
+                   cohort_month,
+                   COUNT(DISTINCT invoice_no) AS orders,
+                   SUM(total_price)           AS revenue,
+                   COUNT(DISTINCT DATE_TRUNC('month', invoice_date)) AS active_months,
+                   MIN(invoice_date)::date    AS first_purchase_date,
+                   MAX(invoice_date)::date    AS last_purchase_date
+            FROM retail_transactions
+            JOIN cohorts USING (customer_id)
+            GROUP BY customer_id, cohort_month
+        )
+        SELECT TO_CHAR(cohort_month, 'YYYY-MM')            AS cohort_month,
+               COUNT(*)                                    AS cohort_size,
+               COUNT(*) FILTER (WHERE orders > 1)          AS repeat_customers,
+               COUNT(*) FILTER (WHERE orders = 1)          AS one_time_customers,
+               ROUND(100.0 * COUNT(*) FILTER (WHERE orders > 1) / COUNT(*), 2)
+                                                           AS repeat_rate_pct,
+               ROUND(SUM(revenue), 2)                      AS lifetime_revenue,
+               ROUND(AVG(revenue), 2)                      AS revenue_per_customer,
+               ROUND(AVG(orders), 2)                       AS avg_orders_per_customer,
+               ROUND(AVG(active_months), 2)                AS avg_active_months,
+               ROUND(AVG(last_purchase_date - first_purchase_date), 1)
+                                                           AS avg_lifetime_days
+        FROM base
+        GROUP BY cohort_month
+        ORDER BY cohort_month
+        """,
+        conn,
+    )
+
+
 def write(df: pd.DataFrame, name: str) -> None:
     path = DATASET_DIR / name
     df.to_csv(path, index=False)
@@ -229,6 +349,8 @@ def main() -> None:
         write(export_dim_customer(conn), "DimCustomer.csv")
         write(export_dim_product(conn), "DimProduct.csv")
         write(export_dim_country(conn), "DimCountry.csv")
+        write(export_cohort_retention(conn), "CohortRetention.csv")
+        write(export_cohort_summary(conn), "CohortSummary.csv")
     finally:
         conn.close()
     print("\nPower BI dataset written to powerbi/dataset/")
