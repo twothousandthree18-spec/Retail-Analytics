@@ -1,0 +1,5 @@
+# Python dependencies for the PostgreSQL + SQL analytics layer.
+# Install with:  pip install -r sql/requirements.txt
+psycopg2-binary==2.9.12
+python-dotenv==1.2.2
+pandas>=2.0

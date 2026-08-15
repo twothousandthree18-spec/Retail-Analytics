@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import hashlib
 import html
+import os
 import shutil
 import tempfile
 import zipfile
@@ -42,6 +43,12 @@ from openpyxl.utils import get_column_letter
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DS = REPO_ROOT / "powerbi" / "dataset"
 XLSX = REPO_ROOT / "Retail_Analysis_Report.xlsx"
+
+# Temporary workbook scratch goes to the configured pipeline temp workspace
+# (default: repo root, matching the historical behaviour) so large intermediate
+# xlsx writes never fill the drive holding the repository.
+_TMP_ROOT = Path(os.environ.get("PIPELINE_TEMP_DIR") or REPO_ROOT)
+TMP_WORKSPACE = _TMP_ROOT / "pipeline_runs"
 
 MAX_INDEX = 12
 NEW_SHEETS = [
@@ -277,7 +284,8 @@ def main() -> None:
     parts["xl/styles.xml"] = build_styles(parts["xl/styles.xml"])
 
     # ---- write the new package ----
-    fd, tmp = tempfile.mkstemp(suffix=".xlsx", dir=str(REPO_ROOT))
+    TMP_WORKSPACE.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(suffix=".xlsx", dir=str(TMP_WORKSPACE))
     import os
     os.close(fd)
     with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as z:
