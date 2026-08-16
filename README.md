@@ -1,111 +1,161 @@
-# Data Analysis Class — June 2026
+# End-to-End Retail Analytics & Customer Intelligence Platform
 
-Course notebooks and materials for learning Python for data analysis.
-
-## Folder Structure
+A complete, production-minded analytics project on the **Online Retail dataset**
+(UCI) — from raw transactional CSV to validated dashboards and a **deployed
+customer-churn machine-learning model**. Every number in this README is
+verified by an automated validation suite that reconciles independent Python,
+SQL and Power BI implementations against each other.
 
 ```
-├── 01_Python_Foundations/        # Python basics: types, variables, loops, conditionals, strings, lists, dicts, functions
-├── 02_NumPy_and_Arrays/          # NumPy arrays: creation, slicing, filtering, broadcasting, stats, random
-├── 03_Pandas_Data_Analysis/      # Pandas: DataFrames, Excel/CSV I/O, filtering, grouping, quiz app, banking
-├── 04_File_Handling_and_IO/      # File I/O: read/write/append, JSON, CSV module, error handling, OS ops
-├── data/                         # Shared datasets used across exercises
+Raw Retail Data → Python/Pandas → Data Quality → PostgreSQL
+      → SQL/Excel/Power BI → Customer Analytics (RFM + Cohorts)
+      → ML → Churn Prediction API → Interactive Demo → Business Decision
+```
+
+## Verified results (reconciled across Python, SQL and Power BI)
+
+| Metric | Value |
+|---|---|
+| Cleaned transaction lines | **527,390** |
+| Customers (attributed) | **4,339** |
+| Total revenue | **£10,619,986.68** |
+| Total orders | **22,064** |
+| Average order value | **£481.33** |
+| Repeat customers | **2,845 (65.57%)** |
+| Churn model — W2 ROC-AUC | **0.7332** |
+| Churn model — W2 recall | **0.7941** |
+
+---
+
+## Project layers
+
+| Phase | Layer | What it does | Deliverables |
+|---|---|---|---|
+| 1–2 | Python / Pandas pipeline | Clean raw 541,909-row CSV; compute KPIs; validate | `data/cleaned_retail_data.csv`, Excel report (26 sheets, RFM segmentation) |
+| 3–4 | PostgreSQL + SQL | Reproduce analytics in SQL: sales, RFM, cohorts | `sql/*.sql`, `rfm_segments`, `cohort_retention` tables |
+| 3–4 | Excel & Power BI | Recruiter-facing dashboards on validated data | `Retail_Analysis.pbit`, 5 report pages, 29 DAX measures |
+| 5 | Production pipeline | End-to-end `run_pipeline.py` with data-quality gate + reconciliation | `pipeline/`, `reports/` run manifests |
+| 6 | Machine learning | Churn prediction: features, model family, tuning | `run_ml.py`, `run_ml_tune.py`, final tuned logistic (C=0.1) |
+| 7 | Serve & deploy | FastAPI endpoint, Streamlit demo, CI, deployment docs | `api/`, `app/`, `.github/workflows/`, `deployment/` |
+
+### 1. Data cleaning & customer analytics (Python / pandas / Excel)
+`OnlineRetail cleaning.ipynb` cleans the raw data and produces
+`Retail_Analysis_Report.xlsx` with **26 sheets** — Summary Dashboard, Sales,
+Customer, Product, Time analysis and RFM Customer Segmentation (Recency /
+Frequency / Monetary quartiles + 7 customer segments for 4,339 customers), plus
+cohort sheets. The cleaned dataset exports to `data/cleaned_retail_data.csv`.
+
+### 2. SQL analytics layer (PostgreSQL)
+`sql/` re-analyses the same cleaned data **independently** in PostgreSQL and
+reconciles it with the Python results:
+- `sql/schema.sql` + `sql/load_data.py` — reproducible, credential-safe load
+- `sql/01…06_*.sql` — **38 business questions** using CTEs, window functions,
+  time intelligence; RFM segmentation reproduced in SQL
+- `sql/06_cohort_retention_analysis.sql` — customer cohorts with M0–M12
+  retention matrix, revenue-by-age, lifecycle summaries
+- `sql/verify_pipeline.py` / `sql/cohort_validation.py` — automated
+  reconciliation (RFM agrees 100% customer-by-customer; cohorts 12/12 PASS)
+
+**Phase 4 findings:** 13 monthly cohorts; M1 retention 22.7%, 6-month retention
+27.2%, months 3–10 plateau at 26–30%; the founding Dec-2010 cohort retains
+87.5% of customers and generates 50.7% of cohort revenue.
+
+### 3. Power BI layer
+`powerbi/` ships a star-schema model (FactSales + 4 dimensions + cohort tables,
+4 relationships, 29 DAX measures), parameterised M queries, a page build spec
+and static previews of all report pages — generated with **real data** and
+reconciled against PostgreSQL (24 checks, all PASS). See
+`powerbi/PHASE3_REPORT.md`.
+
+### 4. Production pipeline & data quality
+`pipeline/run_pipeline.py` orchestrates the whole chain with a **quality gate**:
+schema checks, missing-value policy, duplicate detection, date validation,
+business rules, and a **Python-vs-PostgreSQL reconciliation** (16 metrics, all
+PASS). Status is persisted per run in `reports/pipeline_run*.json`.
+`reports/generate_data_quality_report.py` produces a stakeholder report
+(Markdown + compact HTML) from the live validated artifacts.
+
+### 5. Machine learning — customer churn (Phase 6)
+Built on the SQL-validated customer table, predicting 3-month churn.
+- **18 engineered features** (recency, frequency, monetary, tenure, product
+  breadth, purchase timing, gaps, recency-of-orders…)
+- **Temporal validation:** W1 (Dec 2010–Aug 2011) trains/validates; **W2
+  (Mar–Nov 2011) held out** as a true out-of-time test
+- Model family: logistic, random forest, gradient boosting + DummyClassifier
+  baseline; tuning on **W1 only** with a recall guard
+- **Final model: tuned Logistic Regression (C=0.1)** — W2 ROC-AUC **0.7332**,
+  PR-AUC **0.5945**, recall **0.7941**, identifying **1,114 / 2,813 (39.6%)**
+  W2 customers as high-risk
+- Interpretability: `reports/ml_feature_importance.csv` + SHAP-style
+  coefficient explanations; top drivers are `active_months`, `distinct_products`,
+  `recency_days`, `gap_mean_days`, `total_quantity`
+
+> Association, not causation: features indicate which signals move predicted
+> churn risk; the model supports business decisions rather than dictating them.
+
+### 6. Serving, API & deployment (Phase 7)
+- **Interactive demo:** `streamlit run app/churn_demo.py` — enter a customer
+  profile, get probability + risk band + key signals + a recommended
+  interpretation, from the **real** tuned model.
+- **Prediction API:** `uvicorn api.main:app` — `POST /predict` returns
+  `{"churn_probability", "risk_band", "prediction"}`; `GET /health`, `GET /model`.
+- **CI/CD:** `.github/workflows/ci.yml` (fast checks on every push) and
+  `full-pipeline.yml` (opt-in full validation).
+- **Deployment:** `deployment/README.md` — local run, env vars, cloud steps,
+  Dockerfile; honest about limitations (no live cloud deployment running).
+
+---
+
+## Repository layout
+
+```
+├── pipeline/            # Phase 5 production pipeline + Phase 6 ML
+│   ├── run_pipeline.py  # end-to-end orchestration (9 stages)
+│   ├── validators.py    # data-quality gate + reconciliation
+│   ├── ml_features.py / ml_models.py / ml_tuning.py
+│   ├── run_ml.py / run_ml_tune.py
+│   ├── model_export.py  # Phase 7: serialize final tuned model
+│   └── tests/           # unit / integration / ML / tuning / slow
+├── sql/                 # schema, loaders, 38-question analytics, verification
+├── powerbi/             # .pbit template, dataset export, page spec, previews
+├── app/                 # Streamlit churn demo
+├── api/                 # FastAPI service
+├── deployment/          # deployment guide (+ Dockerfile recipe)
+├── reports/             # run manifests, reports, data-quality report, ML outputs
+├── docs/                # architecture, case study, project summary, interview prep
+├── .github/workflows/   # CI + full-pipeline validation
+├── requirements.txt     # Phase 7 app/API deps
+├── .env.example         # environment template (never commit .env)
 └── README.md
 ```
 
-## Notebooks
+> The course notebooks that accompany this project live under `01_…_04_` —
+> see below.
 
-| # | Notebook | Topics |
-|---|----------|--------|
-| 1 | `01_Python_Foundations/01_Python_Foundations.ipynb` | Data types, variables, input, f-strings, operators, conditionals, string methods, loops, lists, dicts, tuples, sets, list comprehensions, functions |
-| 2 | `02_NumPy_and_Arrays/02_NumPy_and_Arrays.ipynb` | Array creation, properties, reshape, slicing, broadcasting, filtering, statistics, random |
-| 3 | `03_Pandas_Data_Analysis/03_Pandas_Data_Analysis.ipynb` | Reading Excel/CSV, DataFrame exploration, filtering, missing data, sorting, grouping, quiz app, banking system |
-| 4 | `04_File_Handling_and_IO/04_File_Handling_and_IO.ipynb` | File read/write/append, JSON, CSV module, error handling, OS module, user registration system |
+---
 
-## Data Files
-
-- `03_Pandas_Data_Analysis/` — VendorProducts.xlsx, bank.csv, Questions.csv, StudentAgeData.xlsx/.csv, FetcheData.html
-- `04_File_Handling_and_IO/` — introduction.txt, welcome.txt, UsersDatabase.txt
-- `data/` — industry.csv, Analysis.xlsx
-
-## Scripts
-
-- `01_Python_Foundations/If_Elif.py` — Conditionals: arithmetic calculator + coffee machine
-- `01_Python_Foundations/StringFormatting.py` — f-string formatting with user input
-
-## Retail Analytics Project
-
-An end-to-end data analysis project on the online retail dataset (527,390 cleaned
-transaction lines), built in two layers:
-
-### 1. Python / Pandas pipeline (Excel report)
-`OnlineRetail cleaning.ipynb` cleans the raw data and produces
-`Retail_Analysis_Report.xlsx` with **26 sheets**, including:
-`Summary Dashboard`, `Sales Analysis`, `Customer Analysis`, `Product Analysis`,
-`Time Analysis`, and the `RFM Customer Segmentation` sheet (Recency / Frequency /
-Monetary quartile scores + 7 customer segments for 4,339 customers). Phase 4
-appends three cohort sheets without touching the originals: `Customer Cohort
-Analysis`, `Cohort Customer Counts` and `Cohort Revenue Analysis` (built by
-`reports/build_cohort_excel.py` at the OOXML level — the original 23 sheets are
-preserved byte-for-byte).
-
-The notebook also exports the cleaned dataset to `data/cleaned_retail_data.csv`
-(last cell), which is the single source of truth for the SQL layer.
-
-### 2. PostgreSQL + Advanced SQL analytics layer
-The `sql/` folder re-analyses the same cleaned data in PostgreSQL and
-independently **reproduces/validates** the Python results:
-
-- `sql/schema.sql` — `retail_transactions` table + indexes
-- `sql/load_data.py` — reproducible bulk loader (credential-safe via `DATABASE_URL`)
-- `sql/01_sales_analysis.sql` … `sql/06_cohort_retention_analysis.sql` — 38 business
-  questions answered with CTEs, window functions and time intelligence
-- `sql/05_advanced_analytics.sql` — RFM segmentation reproduced in SQL
-- `sql/06_cohort_retention_analysis.sql` — Phase 4: customer cohorts by
-  first-purchase month with a retention matrix (M0..M12), revenue-by-age and
-  lifecycle summaries
-- `sql/cohort_validation.py` — SQL vs pandas reconcile of the cohort tables (12/12 PASS)
-- `sql/generate_insights_report.py` — machine-generated `sql/insights_report.md`
-- `sql/verify_pipeline.py` — automated verification (currently **all checks pass**)
-
-Key results (validated identically in both engines): total revenue **£10,619,986.68**,
-total orders **22,064**, total customers **4,339**, average order value **£481.33**,
-UK = 84.55% of revenue, 1,130 customers generate 80% of revenue, and SQL/pandas
-RFM segments agree **100% customer-by-customer**.
-
-**Phase 4 cohort findings** (SQL = pandas, to the penny): 4,339 customers across
-13 cohorts (Dec 2010 – Dec 2011); M1 retention **22.7%**, 6-month retention
-**27.2%**, months 3–10 plateau at 26–30%; the founding Dec-2010 cohort retains
-**87.5%** of customers, generates **£5,087 / customer** and **50.7%** of cohort
-revenue. `reports/cohort_insights_report.md` is the machine-generated narrative.
-
-### 3. Power BI retail analytics layer
-
-The `powerbi/` folder adds a recruiter-facing Power BI deliverable built **on top
-of the validated SQL layer** (no re-cleaning, no fabricated figures):
-
-- `powerbi/Retail_Analysis.pbit` — Power BI template: star-schema model
-  (FactSales + 4 dimensions) **plus the Phase 4 cohort tables** (CohortRetention,
-  CohortSummary), 4 relationships, **35 DAX measures** (incl. 6 cohort measures),
-  parameterised M queries that load straight from `powerbi/dataset/`.
-- `powerbi/scripts/export_pbi_dataset.py` + `validate_pbi.py` — regenerate and
-  reconcile the dataset against PostgreSQL (37 checks, all PASS).
-- `powerbi/pages.md`, `powerbi/previews/` — page build spec + static previews of
-  all 6 report pages rendered with real data, including the new **Customer
-  Retention** page (retention heatmap, decay curve, cohort lifecycle). No Power
-  BI Desktop in the authoring environment, so pages are built from spec rather
-  than shipped untested.
-- `powerbi/PHASE3_REPORT.md` — full deliverables, model verification and
-  validation report. Open the `.pbit`, point `DatasetFolder` at
-  `powerbi/dataset/`, and Mark as date table on DimDate.
-
-See `sql/README.md` for setup, usage and details.
-
-### Setup (SQL layer only)
+## Quick start
 
 ```bash
-cp .env.example .env          # then fill in your DATABASE_URL
-pip install -r sql/requirements.txt
-python sql/load_data.py       # load the cleaned CSV into PostgreSQL
-python sql/verify_pipeline.py # run all checks
+python -m venv .venv && .venv\Scripts\activate    # Windows
+pip install -r requirements.txt -r sql/requirements.txt
+cp .env.example .env                              # set DATABASE_URL
+
+python pipeline/run_pipeline.py   # clean -> PostgreSQL -> SQL -> PBI dataset -> validate
+python pipeline/run_ml.py         # train model family
+python pipeline/run_ml_tune.py    # tune -> final model
+python pipeline/model_export.py   # export artifact for demo/API
+
+streamlit run app/churn_demo.py                # interactive demo
+uvicorn api.main:app --host 0.0.0.0 --port 8000 # prediction API
+python reports/generate_data_quality_report.py  # monitoring report
 ```
+
+## Course notebooks (original companion material)
+`01_Python_Foundations/` … `04_File_Handling_and_IO/` are the course notebooks
+this project grew out of (Python basics, NumPy, Pandas, file I/O).
+
+---
+
+_Validation status is always reproducible: run the tests and
+`sql/verify_pipeline.py` — see each layer's README for details._

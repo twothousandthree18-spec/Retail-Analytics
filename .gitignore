@@ -1,5 +1,7 @@
 # Credentials / secrets
 .env
+*.pem
+*.key
 
 # Python
 .venv/
@@ -15,3 +17,8 @@ Thumbs.db
 # Generated data artifacts (regenerate with the notebook / scripts)
 data/cleaned_retail_data.csv
 powerbi/dataset/
+
+# Phase 7 — generated model artifacts (regenerate with pipeline/model_export.py)
+models/
+app/.streamlit/
+.streamlit/

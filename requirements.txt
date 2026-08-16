@@ -1,0 +1,17 @@
+# Phase 7 — application & API dependencies (Streamlit demo + FastAPI endpoint).
+# Install:  python -m pip install -r requirements.txt
+
+streamlit>=1.61
+fastapi>=0.141
+uvicorn>=0.52
+pydantic>=2.13
+httpx>=0.28
+
+# Phase 6 model stack (already pinned via pipeline/tests)
+numpy>=1.26
+pandas>=2.0
+scikit-learn>=1.3
+joblib>=1.3
+python-dotenv>=1.2
+matplotlib>=3.8
+psycopg2-binary>=2.9
