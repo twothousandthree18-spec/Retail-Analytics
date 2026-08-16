@@ -1,0 +1,110 @@
+{
+  "run_id": "2026-08-15",
+  "timestamp": "2026-08-15T13:34:26",
+  "status": "SUCCESS",
+  "problem": "customer churn prediction",
+  "target": "churn = no purchase in the label window following an observation window (0/1)",
+  "windows": {
+    "W1_train_val": {
+      "obs": [
+        "2010-12-01",
+        "2011-05-31"
+      ],
+      "label": [
+        "2011-06-01",
+        "2011-08-31"
+      ]
+    },
+    "W2_temporal_test": {
+      "obs": [
+        "2011-03-01",
+        "2011-08-31"
+      ],
+      "label": [
+        "2011-09-01",
+        "2011-11-30"
+      ]
+    }
+  },
+  "models": {
+    "logistic": {
+      "model": "logistic",
+      "accuracy": 0.6998,
+      "precision": 0.6667,
+      "recall": 0.8079,
+      "f1": 0.7305,
+      "roc_auc": 0.7531,
+      "pr_auc": 0.6962,
+      "confusion": {
+        "tn": 796,
+        "fp": 553,
+        "fn": 263,
+        "tp": 1106
+      }
+    },
+    "random_forest": {
+      "model": "random_forest",
+      "accuracy": 0.688,
+      "precision": 0.6658,
+      "recall": 0.7641,
+      "f1": 0.7116,
+      "roc_auc": 0.7487,
+      "pr_auc": 0.6941,
+      "confusion": {
+        "tn": 824,
+        "fp": 525,
+        "fn": 323,
+        "tp": 1046
+      }
+    },
+    "gradient_boosting": {
+      "model": "gradient_boosting",
+      "accuracy": 0.6663,
+      "precision": 0.6504,
+      "recall": 0.7297,
+      "f1": 0.6878,
+      "roc_auc": 0.723,
+      "pr_auc": 0.6683,
+      "confusion": {
+        "tn": 812,
+        "fp": 537,
+        "fn": 370,
+        "tp": 999
+      }
+    }
+  },
+  "baseline": {
+    "model": "dummy_baseline",
+    "accuracy": 0.5037,
+    "precision": 0.5037,
+    "recall": 1.0,
+    "f1": 0.6699,
+    "roc_auc": 0.5,
+    "pr_auc": 0.5037,
+    "confusion": {
+      "tn": 0,
+      "fp": 1349,
+      "fn": 0,
+      "tp": 1369
+    }
+  },
+  "best_model": "logistic",
+  "temporal_test": {
+    "model": "Pipeline",
+    "accuracy": 0.647,
+    "precision": 0.5361,
+    "recall": 0.795,
+    "f1": 0.6403,
+    "roc_auc": 0.7328,
+    "pr_auc": 0.5932,
+    "confusion": {
+      "tn": 936,
+      "fp": 765,
+      "fn": 228,
+      "tp": 884
+    }
+  },
+  "train_window_n": 2718,
+  "temporal_window_n": 2813,
+  "random_state": 42
+}

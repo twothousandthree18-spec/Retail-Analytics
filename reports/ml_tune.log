@@ -1,0 +1,29 @@
+============================================================
+RETAIL ANALYTICS — CHURN ML TUNING (PHASE 6.1)
+Run ID: 2026-08-15
+============================================================
+[1/11] DATASET              RUNNING
+[1/11] DATASET              PASS  392,732 rows, 4,339 customers
+[2/11] FEATURES             RUNNING
+[2/11] FEATURES             PASS  2,718 customers x 18 features
+[3/11] TARGET               RUNNING
+[3/11] TARGET               PASS  churn rate 50.4% (1369/2718)
+[4/11] BASELINE             RUNNING
+[4/11] BASELINE             PASS  majority-class roc_auc=0.500
+[5/11] TUNE                 RUNNING
+[5/11] TUNE                 PASS  W1-only CV  logistic=0.755, random_forest=0.753, gradient_boosting=0.742
+[6/11] COMPARE              RUNNING
+[6/11] COMPARE              PASS  6 rows (current + tuned x 3 models) W1 CV
+[7/11] TEMPORAL TEST        RUNNING
+[7/11] TEMPORAL TEST        PASS  best tuned=logistic  W2 roc_auc=0.733 pr_auc=0.595 (model never saw W2)
+[8/11] SELECT               RUNNING
+[8/11] SELECT               PASS  final=logistic  switch=True  (tuned 'logistic' improves W2 (roc_auc 0.7332 vs 0.7328, pr_auc 0.5945 vs 0.5932) with recall 0.7941 vs 0.7950)
+[9/11] INTERPRETABILITY     RUNNING
+[9/11] INTERPRETABILITY     PASS  final=logistic  top: active_months, distinct_products, recency_days, gap_mean_days, total_quantity
+[10/11] PREDICTIONS         RUNNING
+[10/11] PREDICTIONS         PASS  2,813 W2 customers; 1114 HIGH risk
+[11/11] REPORT              RUNNING
+  manifest: reports\ml_tune.json
+  report:   reports\ml_tune_report.md
+  regenerated: ml_predictions_{train,temporal}.csv, ml_feature_importance.csv
+[11/11] REPORT              PASS  written

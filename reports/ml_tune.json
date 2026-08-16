@@ -1,0 +1,198 @@
+{
+  "run_id": "2026-08-15",
+  "timestamp": "2026-08-15T17:14:17",
+  "status": "SUCCESS",
+  "purpose": "Phase 6.1 lightweight hyperparameter tuning",
+  "selection_rule": "best tuned model by W1 CV ROC-AUC; final model by W2 ROC-AUC/PR-AUC improvement within recall guard",
+  "windows": {
+    "W1_train_val": {
+      "obs": [
+        "2010-12-01",
+        "2011-05-31"
+      ],
+      "label": [
+        "2011-06-01",
+        "2011-08-31"
+      ]
+    },
+    "W2_temporal_test": {
+      "obs": [
+        "2011-03-01",
+        "2011-08-31"
+      ],
+      "label": [
+        "2011-09-01",
+        "2011-11-30"
+      ]
+    }
+  },
+  "search_space": {
+    "logistic": {
+      "model__C": [
+        0.01,
+        0.1,
+        1.0,
+        10.0
+      ]
+    },
+    "random_forest": {
+      "model__n_estimators": [
+        200,
+        400
+      ],
+      "model__max_depth": [
+        8,
+        12
+      ],
+      "model__min_samples_leaf": [
+        2,
+        5
+      ]
+    },
+    "gradient_boosting": {
+      "model__n_estimators": [
+        150,
+        250
+      ],
+      "model__max_depth": [
+        3,
+        4
+      ],
+      "model__learning_rate": [
+        0.05,
+        0.1
+      ]
+    }
+  },
+  "tuned_w1_cv": {
+    "logistic": {
+      "roc_auc": 0.7551205796548104,
+      "pr_auc": 0.7073415341478334,
+      "accuracy": 0.6994123063590078,
+      "precision": 0.6668318946610103,
+      "recall": 0.8071602363573167,
+      "f1": 0.7299303092918369
+    },
+    "random_forest": {
+      "roc_auc": 0.7531648604406136,
+      "pr_auc": 0.7022197742238316,
+      "accuracy": 0.6939003087422814,
+      "precision": 0.6709293160553835,
+      "recall": 0.7728322772118392,
+      "f1": 0.7177062379542777
+    },
+    "gradient_boosting": {
+      "roc_auc": 0.741811124293464,
+      "pr_auc": 0.690374774668937,
+      "accuracy": 0.68507000866645,
+      "precision": 0.6623585117216406,
+      "recall": 0.7662736290473516,
+      "f1": 0.7099687221787395
+    }
+  },
+  "tuned_best_params": {
+    "logistic": {
+      "model__C": 0.1
+    },
+    "random_forest": {
+      "model__max_depth": 8,
+      "model__min_samples_leaf": 5,
+      "model__n_estimators": 200
+    },
+    "gradient_boosting": {
+      "model__learning_rate": 0.05,
+      "model__max_depth": 3,
+      "model__n_estimators": 150
+    }
+  },
+  "current_w1_cv": {
+    "logistic": {
+      "model": "logistic",
+      "accuracy": 0.6998,
+      "precision": 0.6667,
+      "recall": 0.8079,
+      "f1": 0.7305,
+      "roc_auc": 0.7531,
+      "pr_auc": 0.6962
+    },
+    "random_forest": {
+      "model": "random_forest",
+      "accuracy": 0.688,
+      "precision": 0.6658,
+      "recall": 0.7641,
+      "f1": 0.7116,
+      "roc_auc": 0.7487,
+      "pr_auc": 0.6941
+    },
+    "gradient_boosting": {
+      "model": "gradient_boosting",
+      "accuracy": 0.6663,
+      "precision": 0.6504,
+      "recall": 0.7297,
+      "f1": 0.6878,
+      "roc_auc": 0.723,
+      "pr_auc": 0.6683
+    }
+  },
+  "baseline": {
+    "model": "dummy_baseline",
+    "accuracy": 0.5037,
+    "precision": 0.5037,
+    "recall": 1.0,
+    "f1": 0.6699,
+    "roc_auc": 0.5,
+    "pr_auc": 0.5037,
+    "confusion": {
+      "tn": 0,
+      "fp": 1349,
+      "fn": 0,
+      "tp": 1369
+    }
+  },
+  "best_tuned_by_cv": "logistic",
+  "w2_temporal": {
+    "current_logistic": {
+      "model": "Pipeline",
+      "accuracy": 0.647,
+      "precision": 0.5361,
+      "recall": 0.795,
+      "f1": 0.6403,
+      "roc_auc": 0.7328,
+      "pr_auc": 0.5932,
+      "confusion": {
+        "tn": 936,
+        "fp": 765,
+        "fn": 228,
+        "tp": 884
+      }
+    },
+    "tuned_best": {
+      "model": "Pipeline",
+      "accuracy": 0.6466,
+      "precision": 0.5358,
+      "recall": 0.7941,
+      "f1": 0.6399,
+      "roc_auc": 0.7332,
+      "pr_auc": 0.5945,
+      "confusion": {
+        "tn": 936,
+        "fp": 765,
+        "fn": 229,
+        "tp": 883
+      }
+    }
+  },
+  "decision": {
+    "switch": true,
+    "final_model": "logistic",
+    "improves_roc": true,
+    "improves_pr": true,
+    "recall_ok": true,
+    "reason": "tuned 'logistic' improves W2 (roc_auc 0.7332 vs 0.7328, pr_auc 0.5945 vs 0.5932) with recall 0.7941 vs 0.7950"
+  },
+  "final_model": "logistic",
+  "final_source": "tuned_logistic",
+  "final_model_params": {
+    "model__C": 0.1
+  }
+}

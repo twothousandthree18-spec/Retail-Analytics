@@ -1,0 +1,24 @@
+============================================================
+RETAIL ANALYTICS — CHURN ML LAYER (PHASE 6)
+Run ID: 2026-08-15
+============================================================
+[1/9] DATASET               RUNNING
+[1/9] DATASET               PASS  392,732 rows, 4,339 customers, 2010-12-01..2011-12-09
+[2/9] FEATURES              RUNNING
+[2/9] FEATURES              PASS  2,718 customers x 18 features
+[3/9] TARGET                RUNNING
+[3/9] TARGET                PASS  churn rate 50.4% (1369/2718)
+[4/9] BASELINE              RUNNING
+[4/9] BASELINE              PASS  majority-class  acc=0.504 roc_auc=0.500
+[5/9] TRAIN                 RUNNING
+[5/9] TRAIN                 PASS  best=logistic  roc_auc=0.753 pr_auc=0.696 f1=0.731
+[6/9] TEMPORAL TEST         RUNNING
+[6/9] TEMPORAL TEST         PASS  W2 n=2,813 churn=39.5% roc_auc=0.733 pr_auc=0.593 f1=0.640
+[7/9] INTERPRETABILITY      RUNNING
+[7/9] INTERPRETABILITY      PASS  top: active_months, total_quantity, distinct_products, recency_days, gap_mean_days
+[8/9] PREDICTIONS           RUNNING
+[8/9] PREDICTIONS           PASS  2,813 customers; 1121 HIGH risk (W2)
+[9/9] REPORT                RUNNING
+  manifest: reports\ml_run.json
+  report:   reports\ml_run_report.md
+[9/9] REPORT                PASS  written
