@@ -858,7 +858,7 @@
       {
         "name": "DatasetFolder",
         "kind": "m",
-        "expression": "\"C:/Users/Abdul Rehman/Documents/GitHub/Maimoona Data Analysis/powerbi/dataset\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]",
+        "expression": "\"C:/Users/Abdul Rehman/Documents/GitHub/Retail-Analytics/powerbi/dataset\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]",
         "annotations": [
           {
             "name": "PBI_ResultType",
