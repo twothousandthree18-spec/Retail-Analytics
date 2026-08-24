@@ -20,7 +20,7 @@ but cross-checked across four analytical layers.
 |---|---|
 | [Overview & verified results](#overview-and-verified-results) · [Architecture](#architecture) | [Power BI dashboard](#power-bi-dashboard) · [Excel workbook](#excel-analysis) |
 | [RFM segmentation](#rfm-customer-segmentation) · [Cohort & retention](#customer-cohort-and-retention-analysis) | [SQL highlights](#advanced-sql-highlights) · [Machine learning](#predictive-analytics-customer-churn) |
-| [Streamlit demo](#interactive-churn-prediction-demo) · [Prediction API](#prediction-api) | [Data quality & validation](#data-quality-and-validation) · [Business insights](#key-business-insights) |
+| [Matplotlib visualizations](#python-analytical-visualizations) · [Streamlit demo](#interactive-churn-prediction-demo) | [Prediction API](#prediction-api) · [Data quality & validation](#data-quality-and-validation) · [Business insights](#key-business-insights) |
 | [Quick start](#quick-start) · [Documentation](#documentation) · [Data availability](#data-availability) | [Repository layout](#repository-layout) · [Skills demonstrated](#skills-demonstrated) |
 
 ---
@@ -109,6 +109,30 @@ per customer £2,448, average orders per customer 5.1.*
 ![Customer Retention](powerbi/previews/page6_customer_retention.png)
 *Cohort retention heatmap and decay curves — retention plateaus at 26–30% from
 month 3; the founding Dec-2010 cohort drives 50.7% of cohort revenue.*
+
+---
+
+## Python Analytical Visualizations
+
+Alongside the BI layer, the project includes an **independent Python-based
+visualization layer built with Matplotlib only** (no seaborn/plotly). A single
+script — [`reports/generate_matplotlib_charts.py`](reports/generate_matplotlib_charts.py) — reads the
+already-validated data tables (Power BI dataset exports, cohort retention
+matrix, ML predictions and feature importance) and renders eight
+presentation-quality charts to [`reports/matplotlib/`](reports/matplotlib/), asserting first that
+every headline value reconciles with the verified project results
+(527,390 transactions · £10,619,986.68 · 22,064 orders · 4,339 customers ·
+13 cohorts · W2 ROC-AUC 0.7332 · 1,114 HIGH-risk customers).
+
+| | |
+|---|---|
+| ![Monthly revenue trend](reports/matplotlib/monthly_revenue.png) | ![Cohort retention heatmap](reports/matplotlib/cohort_retention_heatmap.png) |
+| ![RFM segment distribution](reports/matplotlib/rfm_segment_distribution.png) | ![Churn feature importance](reports/matplotlib/churn_feature_importance.png) |
+
+The full set: monthly revenue & order trends, top-country revenue, RFM segment
+distribution, M0–M12 cohort retention heatmap, top-10 products by revenue,
+W2 churn-risk distribution and coefficient-based churn feature importance.
+The strongest six are also shown on the [portfolio website](website/index.html).
 
 ---
 
